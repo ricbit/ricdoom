@@ -8,12 +8,26 @@ function abort(message) {
   document.write(message);
 }
 
-function load_vertex(start) {
+function scale(x, minx, maxx, size) {
+  return (x - minx) / (maxx - minx) * size;
+}
+
+function draw_stage() {
+  var ctx = $("#display")[0].getContext("2d");
+  var vertexes = state.stage.vertexes;
+  for (var i = 0; i < vertexes.size; i++) {
+    ctx.fillRect(scale(vertexes.x[i], vertexes.minx, vertexes.maxx, 500),
+                 scale(vertexes.y[i], vertexes.miny, vertexes.maxy, 500),
+                 1, 1);
+  }
+}
+
+function load_vertexes(start) {
   var assets = _.rest(state.directory, start);
   var entry = _.findWhere(assets, {name: "VERTEXES"});
   var vertexes = {x: [], y: []};
-  var size = entry.size / 4;
-  for (var i = 0; i < size; i++) {
+  vertexes.size = entry.size / 4;
+  for (var i = 0; i < vertexes.size; i++) {
     vertexes.x.push(state.wad.getInt16(entry.start + i * 4, true));
     vertexes.y.push(state.wad.getInt16(entry.start + i * 4 + 2, true));
   }
@@ -21,15 +35,13 @@ function load_vertex(start) {
   vertexes.maxx = _.max(vertexes.x);
   vertexes.miny = _.min(vertexes.y);
   vertexes.maxy = _.max(vertexes.y);
-  console.log(vertexes);
-
   return vertexes;
 }
 
 function load_stage(stage_name) {
   var stage = {}
   var start = _.findWhere(state.directory, {name: stage_name}).index;
-  stage.vertex = load_vertex(start);
+  stage.vertexes = load_vertexes(start);
   return stage;
 }
 
@@ -54,6 +66,7 @@ function parse_wad() {
     });
   }
   state.stage = load_stage("E1M1");
+  draw_stage();
 }
 
 function load_wad() {
