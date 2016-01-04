@@ -1,3 +1,5 @@
+// Ricardo Bittencourt 2016
+
 var state = {};
 
 $(document).ready(function() {
@@ -93,8 +95,9 @@ function parse_wad() {
 }
 
 function getStageName() {
-  var x = decodeURIComponent(window.location.search.substring(1)).split("=");
-  return x[1];
+  var uri = window.location.search.substring(1);
+  var params = decodeURIComponent(uri).split("=");
+  return params[1];
 }
 
 function load_wad() {
