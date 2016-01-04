@@ -15,10 +15,18 @@ function scale(x, minx, maxx, size) {
 function draw_stage() {
   var ctx = $("#display")[0].getContext("2d");
   var vertexes = state.stage.vertexes;
-  for (var i = 0; i < vertexes.size; i++) {
-    ctx.fillRect(scale(vertexes.x[i], vertexes.minx, vertexes.maxx, 500),
-                 scale(vertexes.y[i], vertexes.miny, vertexes.maxy, 500),
-                 1, 1);
+  var lines = state.stage.lines;
+  for (var i = 0; i < lines.size; i++) {
+    ctx.beginPath();
+    ctx.moveTo(scale(vertexes.x[lines[i].begin], 
+                     vertexes.minx, vertexes.maxx, 500),
+               scale(vertexes.y[lines[i].begin], 
+                     vertexes.miny, vertexes.maxy, 500));
+    ctx.lineTo(scale(vertexes.x[lines[i].end], 
+                     vertexes.minx, vertexes.maxx, 500),
+               scale(vertexes.y[lines[i].end], 
+                     vertexes.miny, vertexes.maxy, 500));
+    ctx.stroke();
   }
 }
 
@@ -38,10 +46,25 @@ function load_vertexes(start) {
   return vertexes;
 }
 
+function load_lines(start) {
+  var assets = _.rest(state.directory, start);
+  var entry = _.findWhere(assets, {name: "LINEDEFS"});
+  var lines = [];
+  lines.size = entry.size / 14;
+  for (var i = 0; i < lines.size; i++) {
+    lines.push({
+      begin: state.wad.getUint16(entry.start + i * 14 + 0, true),
+      end: state.wad.getUint16(entry.start + i * 14 + 2, true)
+    });
+  }
+  return lines;
+}
+
 function load_stage(stage_name) {
   var stage = {}
   var start = _.findWhere(state.directory, {name: stage_name}).index;
   stage.vertexes = load_vertexes(start);
+  stage.lines = load_lines(start);
   return stage;
 }
 
@@ -65,13 +88,18 @@ function parse_wad() {
       index: entry
     });
   }
-  state.stage = load_stage("E1M1");
+  state.stage = load_stage(getStageName());
   draw_stage();
+}
+
+function getStageName() {
+  var x = decodeURIComponent(window.location.search.substring(1)).split("=");
+  return x[1];
 }
 
 function load_wad() {
   xhr = new XMLHttpRequest()
-  xhr.open("GET", "http://localhost:8000/doom.wad", true);
+  xhr.open("GET", "doom.wad", true);
   xhr.responseType = "arraybuffer";
   xhr.onload = function(event) {
     if (this.status == 200) {
