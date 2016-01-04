@@ -15,7 +15,7 @@ function scale(x, minx, maxx, size) {
 }
 
 function draw_stage() {
-  var ctx = $("#display")[0].getContext("2d");
+  var ctx = $("#playfield")[0].getContext("2d");
   var vertexes = state.stage.vertexes;
   var lines = state.stage.lines;
   for (var i = 0; i < lines.size; i++) {
@@ -114,6 +114,8 @@ function load_wad() {
   xhr.onload = function(event) {
     if (this.status == 200) {
       state.wad = new jDataView(this.response);
+      $("#loading").hide();
+      $("#playfield").show();
       parse_wad();
     } else {
       abort("Error loading WAD");

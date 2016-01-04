@@ -4,8 +4,14 @@
     <script type="text/javascript" src="underscore-min.js"></script>
     <script type="text/javascript" src="jdataview.js"></script>
     <script type="text/javascript" src="doom.js"></script>
+    <style>
+      canvas#playfield {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <canvas width="500" height="500" id="display"></canvas>
+    <p id="loading">Loading WAD...</p>
+    <canvas width="500" height="500" id="playfield"></canvas>
   </body>
 </html>
