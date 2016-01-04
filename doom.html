@@ -8,10 +8,27 @@
       canvas#playfield {
         display: none;
       }
+      @keyframes spin {
+        from { transform:rotate(0deg); }
+        to { transform:rotate(360deg); }
+      }
+      .spinning {
+        animation-name: spin;
+        animation-duration: 4000ms;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        font-size: 40px;
+        text-align: center;
+        width: 50px;
+        height: 50px;
+      }
     </style>
   </head>
   <body>
-    <p id="loading">Loading WAD...</p>
+    <div id="loading">
+    <p>Loading WAD</p>
+    <p class="spinning">&#8635;</p>
+    </div>
     <canvas width="500" height="500" id="playfield"></canvas>
   </body>
 </html>
