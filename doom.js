@@ -90,6 +90,12 @@ function parse_wad() {
       index: entry
     });
   }
+  var all_names = _.pluck(state.directory, "name");
+  var name_regexp = /^E.M.$/;
+  var stage_names = _.filter(all_names, function(name) {
+    return name_regexp.test(name);
+  });
+  console.log(stage_names);
   state.stage = load_stage(getStageName());
   draw_stage();
 }
@@ -101,6 +107,7 @@ function getStageName() {
 }
 
 function load_wad() {
+  // Can't use $.get because it doesn't support binary arraybuffers.
   xhr = new XMLHttpRequest()
   xhr.open("GET", "doom.wad", true);
   xhr.responseType = "arraybuffer";
@@ -109,7 +116,7 @@ function load_wad() {
       state.wad = new jDataView(this.response);
       parse_wad();
     } else {
-      array("Error loading WAD");
+      abort("Error loading WAD");
     }
   };
   xhr.send();
