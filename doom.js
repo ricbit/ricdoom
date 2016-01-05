@@ -95,6 +95,13 @@ function parse_wad() {
   var stage_names = _.filter(all_names, function(name) {
     return name_regexp.test(name);
   });
+  var select = $("#stage_select");
+  _.each(stage_names, function(name) {
+    select.append($("<option>", {
+      value: name,
+      text: name
+    }));
+  });
   console.log(stage_names);
   state.stage = load_stage(getStageName());
   draw_stage();
@@ -115,7 +122,7 @@ function load_wad() {
     if (this.status == 200) {
       state.wad = new jDataView(this.response);
       $("#loading").hide();
-      $("#playfield").show();
+      $("#main").show();
       parse_wad();
     } else {
       abort("Error loading WAD");

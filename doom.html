@@ -5,7 +5,7 @@
     <script type="text/javascript" src="jdataview.js"></script>
     <script type="text/javascript" src="doom.js"></script>
     <style>
-      canvas#playfield {
+      div#main {
         display: none;
       }
       @keyframes spin {
@@ -26,9 +26,16 @@
   </head>
   <body>
     <div id="loading">
-    <p>Loading WAD</p>
-    <p class="spinning">&#8635;</p>
+      <p>Loading WAD</p>
+      <p class="spinning">&#8635;</p>
     </div>
-    <canvas width="500" height="500" id="playfield"></canvas>
+    <div id="main">
+      <form>
+        Select stage:
+        <select name="stage" id="stage_select"></select>
+      </form>
+      <canvas width="500" height="500" id="playfield"></canvas>
+    </div>
+    </div>
   </body>
 </html>
