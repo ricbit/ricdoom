@@ -16,6 +16,7 @@ function scale(x, minx, maxx, size) {
 
 function draw_stage() {
   var ctx = $("#playfield")[0].getContext("2d");
+  ctx.clearRect(0, 0, 500, 500);
   var vertexes = state.stage.vertexes;
   var lines = state.stage.lines;
   for (var i = 0; i < lines.size; i++) {
@@ -102,15 +103,13 @@ function parse_wad() {
       text: name
     }));
   });
-  console.log(stage_names);
-  state.stage = load_stage(getStageName());
+  select.change(function() {
+    var name = $(this).find(":selected").text();
+    state.stage = load_stage(name);
+    draw_stage();
+  });
+  state.stage = load_stage(stage_names[0]);
   draw_stage();
-}
-
-function getStageName() {
-  var uri = window.location.search.substring(1);
-  var params = decodeURIComponent(uri).split("=");
-  return params[1];
 }
 
 function load_wad() {
