@@ -6,7 +6,7 @@
   var state = {};
 
   $(document).ready(function() {
-    main();
+    ready();
   });
 
   function abort(message) {
@@ -95,6 +95,9 @@
         index: entry
       });
     }
+  }
+
+  function fill_select() { 
     var all_names = _.pluck(state.directory, "name");
     var name_regexp = /^E.M.$/;
     var stage_names = _.filter(all_names, function(name) {
@@ -109,10 +112,13 @@
     });
     select.change(function() {
       var name = $(this).find(":selected").text();
-      state.stage = load_stage(name);
-      draw_stage();
+      enable_stage(name);
     });
-    state.stage = load_stage(stage_names[0]);
+    enable_stage(stage_names[0]);
+  }
+
+  function enable_stage(name) {
+    state.stage = load_stage(name);
     draw_stage();
   }
 
@@ -123,10 +129,7 @@
     xhr.responseType = "arraybuffer";
     xhr.onload = function(event) {
       if (this.status == 200) {
-        state.wad = new jDataView(this.response);
-        $("#loading").hide();
-        $("#main").show();
-        parse_wad();
+        main(new jDataView(this.response));
       } else {
         abort("Error loading WAD");
       }
@@ -134,7 +137,15 @@
     xhr.send();
   }
 
-  function main() {
+  function main(wad) {
+    state.wad = wad;
+    $("#loading").hide();
+    $("#main").show();
+    parse_wad();
+    fill_select();
+  }
+
+  function ready() {
     load_wad();
   }
 
