@@ -14,6 +14,10 @@
     throw new Error();
   }
 
+  function wad_trim(str) {
+    return (str + '\0').split('\0').shift();
+  }
+
   function Wad(wad) {
     this.wad = wad;
     this.directory = [];
@@ -37,6 +41,44 @@
     }
   };
 
+  Wad.prototype.parse_stage = function(stage_name) {
+    var stage = {};
+    var start = _.findWhere(this.directory, {name: stage_name}).index;
+    stage.vertexes = this.parse_vertexes(start);
+    stage.lines = this.parse_lines(start);
+    return stage;
+  };
+
+  Wad.prototype.parse_vertexes = function(start) {
+    var assets = _.rest(this.directory, start);
+    var entry = _.findWhere(assets, {name: "VERTEXES"});
+    var vertexes = {x: [], y: []};
+    vertexes.size = entry.size / 4;
+    for (var i = 0; i < vertexes.size; i++) {
+      vertexes.x.push(this.wad.getInt16(entry.start + i * 4, true));
+      vertexes.y.push(this.wad.getInt16(entry.start + i * 4 + 2, true));
+    }
+    vertexes.minx = _.min(vertexes.x);
+    vertexes.maxx = _.max(vertexes.x);
+    vertexes.miny = _.min(vertexes.y);
+    vertexes.maxy = _.max(vertexes.y);
+    return vertexes;
+  };
+
+  Wad.prototype.parse_lines = function(start) {
+    var assets = _.rest(state.wad.directory, start);
+    var entry = _.findWhere(assets, {name: "LINEDEFS"});
+    var lines = [];
+    lines.size = entry.size / 14;
+    for (var i = 0; i < lines.size; i++) {
+      lines.push({
+        begin: this.wad.getUint16(entry.start + i * 14 + 0, true),
+        end: this.wad.getUint16(entry.start + i * 14 + 2, true)
+      });
+    }
+    return lines;
+  };
+
   function scale(x, minx, maxx, size) {
     return (x - minx) / (maxx - minx) * size;
   }
@@ -58,48 +100,6 @@
                        vertexes.miny, vertexes.maxy, 500));
       ctx.stroke();
     }
-  }
-
-  function load_vertexes(start) {
-    var assets = _.rest(state.wad.directory, start);
-    var entry = _.findWhere(assets, {name: "VERTEXES"});
-    var vertexes = {x: [], y: []};
-    vertexes.size = entry.size / 4;
-    for (var i = 0; i < vertexes.size; i++) {
-      vertexes.x.push(state.wad.wad.getInt16(entry.start + i * 4, true));
-      vertexes.y.push(state.wad.wad.getInt16(entry.start + i * 4 + 2, true));
-    }
-    vertexes.minx = _.min(vertexes.x);
-    vertexes.maxx = _.max(vertexes.x);
-    vertexes.miny = _.min(vertexes.y);
-    vertexes.maxy = _.max(vertexes.y);
-    return vertexes;
-  }
-
-  function load_lines(start) {
-    var assets = _.rest(state.wad.directory, start);
-    var entry = _.findWhere(assets, {name: "LINEDEFS"});
-    var lines = [];
-    lines.size = entry.size / 14;
-    for (var i = 0; i < lines.size; i++) {
-      lines.push({
-        begin: state.wad.wad.getUint16(entry.start + i * 14 + 0, true),
-        end: state.wad.wad.getUint16(entry.start + i * 14 + 2, true)
-      });
-    }
-    return lines;
-  }
-
-  function load_stage(stage_name) {
-    var stage = {};
-    var start = _.findWhere(state.wad.directory, {name: stage_name}).index;
-    stage.vertexes = load_vertexes(start);
-    stage.lines = load_lines(start);
-    return stage;
-  }
-
-  function wad_trim(str) {
-    return (str + '\0').split('\0').shift();
   }
 
   function fill_select() { 
@@ -127,7 +127,7 @@
   }
 
   function enable_stage(name) {
-    state.stage = load_stage(name);
+    state.stage = state.wad.parse_stage(name);
     draw_stage();
   }
 
