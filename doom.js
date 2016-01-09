@@ -14,6 +14,29 @@
     throw new Error();
   }
 
+  function Wad(wad) {
+    this.wad = wad;
+    this.directory = [];
+    if (this.wad.getString(4, 0) != "IWAD") {
+      abort("WAD format not supported");
+    }
+    this.parse_directory();
+  }
+
+  Wad.prototype.parse_directory = function() {
+    var directory_size = this.wad.getInt32(4, true);
+    var directory_pointer = this.wad.getInt32(8, true);
+    for (var entry = 0; entry < directory_size; entry++) {
+      var addr = directory_pointer + entry * 16;
+      this.directory.push({
+        name: wad_trim(this.wad.getString(8, addr + 8)),
+        start: this.wad.getInt32(addr, true),
+        size: this.wad.getInt32(addr + 4, true),
+        index: entry
+      });
+    }
+  };
+
   function scale(x, minx, maxx, size) {
     return (x - minx) / (maxx - minx) * size;
   }
@@ -38,13 +61,13 @@
   }
 
   function load_vertexes(start) {
-    var assets = _.rest(state.directory, start);
+    var assets = _.rest(state.wad.directory, start);
     var entry = _.findWhere(assets, {name: "VERTEXES"});
     var vertexes = {x: [], y: []};
     vertexes.size = entry.size / 4;
     for (var i = 0; i < vertexes.size; i++) {
-      vertexes.x.push(state.wad.getInt16(entry.start + i * 4, true));
-      vertexes.y.push(state.wad.getInt16(entry.start + i * 4 + 2, true));
+      vertexes.x.push(state.wad.wad.getInt16(entry.start + i * 4, true));
+      vertexes.y.push(state.wad.wad.getInt16(entry.start + i * 4 + 2, true));
     }
     vertexes.minx = _.min(vertexes.x);
     vertexes.maxx = _.max(vertexes.x);
@@ -54,14 +77,14 @@
   }
 
   function load_lines(start) {
-    var assets = _.rest(state.directory, start);
+    var assets = _.rest(state.wad.directory, start);
     var entry = _.findWhere(assets, {name: "LINEDEFS"});
     var lines = [];
     lines.size = entry.size / 14;
     for (var i = 0; i < lines.size; i++) {
       lines.push({
-        begin: state.wad.getUint16(entry.start + i * 14 + 0, true),
-        end: state.wad.getUint16(entry.start + i * 14 + 2, true)
+        begin: state.wad.wad.getUint16(entry.start + i * 14 + 0, true),
+        end: state.wad.wad.getUint16(entry.start + i * 14 + 2, true)
       });
     }
     return lines;
@@ -69,7 +92,7 @@
 
   function load_stage(stage_name) {
     var stage = {};
-    var start = _.findWhere(state.directory, {name: stage_name}).index;
+    var start = _.findWhere(state.wad.directory, {name: stage_name}).index;
     stage.vertexes = load_vertexes(start);
     stage.lines = load_lines(start);
     return stage;
@@ -79,26 +102,8 @@
     return (str + '\0').split('\0').shift();
   }
 
-  function parse_wad() {
-    if (state.wad.getString(4, 0) != "IWAD") {
-      abort("WAD format not supported");
-    }
-    var directory_size = state.wad.getInt32(4, true);
-    var directory_pointer = state.wad.getInt32(8, true);
-    state.directory = [];
-    for (var entry = 0; entry < directory_size; entry++) {
-      var addr = directory_pointer + entry * 16;
-      state.directory.push({
-        name: wad_trim(state.wad.getString(8, addr + 8)),
-        start: state.wad.getInt32(addr, true),
-        size: state.wad.getInt32(addr + 4, true),
-        index: entry
-      });
-    }
-  }
-
   function fill_select() { 
-    var all_names = _.pluck(state.directory, "name");
+    var all_names = _.pluck(state.wad.directory, "name");
     var name_regexp = /^E.M.$/;
     var stage_names = _.filter(all_names, function(name) {
       return name_regexp.test(name);
@@ -138,10 +143,9 @@
   }
 
   function main(wad) {
-    state.wad = wad;
+    state.wad = new Wad(wad);
     $("#loading").hide();
     $("#main").show();
-    parse_wad();
     fill_select();
   }
 
