@@ -119,7 +119,11 @@
       var name = $(this).find(":selected").text();
       enable_stage(name);
     });
-    enable_stage(stage_names[0]);
+  }
+
+  function load_first_stage() {
+    $("#stage_select option:first").attr('selected', 'selected');
+    $("#stage_select").trigger("change");
   }
 
   function enable_stage(name) {
@@ -147,6 +151,7 @@
     $("#loading").hide();
     $("#main").show();
     fill_select();
+    load_first_stage();
   }
 
   function ready() {
