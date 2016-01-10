@@ -3,8 +3,6 @@
 (function() {
   "use strict";
 
-  var state = {};
-
   $(document).ready(function() {
     ready();
   });
@@ -140,10 +138,10 @@
     return _.filter(all_names, function(name) {
       return name_regexp.test(name);
     });
-  }
+  };
 
-  function fill_select() {
-    var stage_names = state.wad.get_stage_names();
+  function fill_select(wad) {
+    var stage_names = wad.get_stage_names();
     var select = $("#stage_select");
     _.each(stage_names, function(name) {
       select.append($("<option>", {
@@ -154,7 +152,7 @@
     select.change(function() {
       var name = $(this).find(":selected").text();
       var context = $("#playfield")[0].getContext("2d");
-      var stage = state.wad.parse_stage(name);
+      var stage = wad.parse_stage(name);
       stage.optimize();
       stage.draw(context);
     });
@@ -180,11 +178,11 @@
     xhr.send();
   }
 
-  function main(wad) {
-    state.wad = new Wad(wad);
+  function main(binary_wad) {
+    var wad = new Wad(binary_wad);
     $("#loading").hide();
     $("#main").show();
-    fill_select();
+    fill_select(wad);
     load_first_stage();
   }
 
