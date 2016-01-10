@@ -67,6 +67,19 @@
     }, 500, 500);
   };
 
+  Stage.prototype.draw = function(context) {
+    context.clearRect(0, 0, 500, 500);
+    for (var i = 0; i < this.lines.length; i++) {
+      var line = this.lines[i];
+      context.beginPath();      
+      context.moveTo(this.scaler.x(this.vertexes.x[line.begin]),
+                     this.scaler.y(this.vertexes.y[line.begin]));
+      context.lineTo(this.scaler.x(this.vertexes.x[line.end]),
+                     this.scaler.y(this.vertexes.y[line.end]));
+      context.stroke();
+    }
+  };
+
   function Wad(wad) {
     this.wad = wad;
     this.directory = [];
@@ -121,21 +134,6 @@
     }
   };
 
-  function draw_stage(stage) {
-    var ctx = $("#playfield")[0].getContext("2d");
-    ctx.clearRect(0, 0, 500, 500);
-    var vertexes = stage.vertexes;
-    var lines = stage.lines;
-    for (var i = 0; i < lines.length; i++) {
-      ctx.beginPath();      
-      ctx.moveTo(stage.scaler.x(vertexes.x[lines[i].begin]),
-                 stage.scaler.y(vertexes.y[lines[i].begin]));
-      ctx.lineTo(stage.scaler.x(vertexes.x[lines[i].end]),
-                 stage.scaler.y(vertexes.y[lines[i].end]));
-      ctx.stroke();
-    }
-  }
-
   function fill_select() { 
     var all_names = _.pluck(state.wad.directory, "name");
     var name_regexp = /^E.M.$/;
@@ -151,9 +149,10 @@
     });
     select.change(function() {
       var name = $(this).find(":selected").text();
+      var context = $("#playfield")[0].getContext("2d");
       var stage = state.wad.parse_stage(name);
       stage.optimize();
-      draw_stage(stage);
+      stage.draw(context);
     });
   }
 
