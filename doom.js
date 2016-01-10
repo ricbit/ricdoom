@@ -44,6 +44,7 @@
   function Stage() {
     this.vertexes = {x: [], y: []};
     this.lines = [];
+    this.sectors = [];
   }
 
   Stage.prototype.push_vertex = function(vertex) {
@@ -54,6 +55,10 @@
   Stage.prototype.push_line = function(line) {
     this.lines.push(line);
   };
+
+  Stage.prototype.push_sector = function(sector) {
+    this.sectors.push(sector);
+  }
 
   Stage.prototype.optimize = function() {
     this.scaler = new Scaler({
@@ -106,6 +111,8 @@
     var stage = new Stage();
     var start = _.findWhere(this.directory, {name: stage_name}).index;
     var assets = _.rest(this.directory, start);
+    this.parse_sectors(assets, stage);
+    console.log(stage.sectors);
     this.parse_vertexes(assets, stage);
     this.parse_lines(assets, stage);
     return stage;
@@ -132,6 +139,16 @@
       });
     }
   };
+
+  Wad.prototype.parse_sectors = function(assets, stage) {
+    var entry = _.findWhere(assets, {name: "SECTORS"});
+    var size = entry.size / 26;
+    for (var i = 0; i < size; i++) {
+      stage.push_sector({
+        floor: wad_trim(this.wad.getString(8, entry.start + i * 26 + 4))
+      });
+    }
+  }
 
   Wad.prototype.get_stage_names = function() {
     var all_names = _.pluck(this.directory, "name");
