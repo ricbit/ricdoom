@@ -16,6 +16,12 @@
     return (str + '\0').split('\0').shift();
   }
 
+  function filled_array(size, value) {
+    return _.map(new Array(size), function(old) {
+      return value;
+    });
+  }
+
   function Scaler(limits) {
     this.xlimits = {
       min: limits.minx,
@@ -36,7 +42,6 @@
       this.ylimits.coef = this.ylimits.outer / this.ylimits.inner;
       this.xlimits.coef = this.ylimits.coef;
     }
-    console.log(this.xlimits);
   }
 
   Scaler.prototype.scale = function(value, limits) {
@@ -68,6 +73,7 @@
       begin: line.begin,
       end: line.end,
       sidedefs: [],
+      vertexes: [line.begin, line.end],
       index: line.index
     };
     if (line.right != 65535) {
@@ -82,7 +88,8 @@
   Stage.prototype.push_sector = function(sector) {
     this.sectors.push({
       floor: sector.floor,
-      lines: []
+      lines: [],
+      raw_polygons: []
     });
   };
 
@@ -100,6 +107,7 @@
       windowy: 500
     });
     this.collect_lines_from_sectors();
+    this.collect_polygons();
   };
 
   Stage.prototype.collect_lines_from_sectors = function() {
@@ -108,6 +116,36 @@
         this.sectors[this.sidedefs[sidedef].sector].lines.push(line.index);
       }.bind(this));
     }.bind(this));
+  };
+
+  Stage.prototype.collect_polygons = function() {
+    _.each(this.sectors, function(sector) {
+      var visited = filled_array(sector.lines.length, false);
+      for (var i = 0; i < sector.lines.length; i++) {
+        if (!visited[i]) {
+          var polygon = this.traverse_polygon(sector, i, visited);
+          sector.raw_polygons.push(polygon);
+        }
+      }
+    }.bind(this));
+  };
+
+  Stage.prototype.traverse_polygon = function(sector, first, visited) {
+    var cur = first;
+    var polygon = [];
+    while (!visited[cur]) {
+      visited[cur] = true;
+      polygon.push(this.lines[sector.lines[cur]]);
+      for (var i = 0; i < sector.lines.length; i++) {
+        if (!visited[i] && _.intersection(
+            this.lines[sector.lines[cur]].vertexes, 
+            this.lines[sector.lines[i]].vertexes).length > 0) {
+          cur = i;
+          break;
+        }
+      }
+    }
+    return polygon;
   };
 
   Stage.prototype.draw = function(context, sector) {
