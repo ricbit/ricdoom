@@ -67,7 +67,8 @@
     var parsed_line = {
       begin: line.begin,
       end: line.end,
-      sidedefs: []
+      sidedefs: [],
+      index: line.index
     };
     if (line.right != 65535) {
       parsed_line.sidedefs.push(line.right);
@@ -79,7 +80,10 @@
   };
 
   Stage.prototype.push_sector = function(sector) {
-    this.sectors.push(sector);
+    this.sectors.push({
+      floor: sector.floor,
+      lines: []
+    });
   };
 
   Stage.prototype.push_sidedef = function(sidedef) {
@@ -95,6 +99,15 @@
       windowx: 500,
       windowy: 500
     });
+    this.collect_lines_from_sectors();
+  };
+
+  Stage.prototype.collect_lines_from_sectors = function() {
+    _.each(this.lines, function(line) {
+      _.each(line.sidedefs, function(sidedef) {
+        this.sectors[this.sidedefs[sidedef].sector].lines.push(line.index);
+      }.bind(this));
+    }.bind(this));
   };
 
   Stage.prototype.draw = function(context, sector) {
@@ -155,14 +168,14 @@
   Wad.prototype.parse_iterator = function(assets, name, size, parser) {
     var entry = _.findWhere(assets, {name: name});
     var entry_size = entry.size / size;
-    for (var i = 0; i < entry_size; i++) {
-      var addr = entry.start + i * size;
-      parser(addr, this.wad);
+    for (var index = 0; index < entry_size; index++) {
+      var addr = entry.start + index * size;
+      parser(addr, index, this.wad);
     }
   };
 
   Wad.prototype.parse_vertexes = function(assets, stage) {
-    this.parse_iterator(assets, "VERTEXES", 4, function(addr, wad) {
+    this.parse_iterator(assets, "VERTEXES", 4, function(addr, index, wad) {
       stage.push_vertex({
         x: wad.getInt16(addr + 0, true),
         y: wad.getInt16(addr + 2, true)
@@ -171,18 +184,19 @@
   };
 
   Wad.prototype.parse_lines = function(assets, stage) {
-    this.parse_iterator(assets, "LINEDEFS", 14, function(addr, wad) {
+    this.parse_iterator(assets, "LINEDEFS", 14, function(addr, index, wad) {
       stage.push_line({
         begin: wad.getUint16(addr + 0, true),
         end: wad.getUint16(addr + 2, true),
         right: wad.getUint16(addr + 10, true),
-        left: wad.getUint16(addr + 12, true)
+        left: wad.getUint16(addr + 12, true),
+        index: index
       });
     });
   };
 
   Wad.prototype.parse_sectors = function(assets, stage) {
-    this.parse_iterator(assets, "SECTORS", 26, function(addr, wad) {
+    this.parse_iterator(assets, "SECTORS", 26, function(addr, index, wad) {
       stage.push_sector({
         floor: wad_trim(wad.getString(8, addr + 4))
       });
@@ -190,7 +204,7 @@
   };
 
   Wad.prototype.parse_sidedefs = function(assets, stage) {
-    this.parse_iterator(assets, "SIDEDEFS", 30, function(addr, wad) {
+    this.parse_iterator(assets, "SIDEDEFS", 30, function(addr, index, wad) {
       stage.push_sidedef({
         sector: wad.getUint16(addr + 28, true),
       });
