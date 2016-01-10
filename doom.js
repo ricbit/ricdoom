@@ -18,9 +18,30 @@
     return (str + '\0').split('\0').shift();
   }
 
-  function Scaler(limits) {
-    this.limits = limits;
+  function Scaler(limits, windowx, windowy) {
+    this.xlimits = {
+      min: limits.minx,
+      max: limits.maxx,
+      size: windowx
+    };
+    this.ylimits = {
+      min: limits.miny,
+      max: limits.maxy,
+      size: windowy
+    };
   }
+
+  Scaler.prototype.scale = function(value, limits) {
+    return (value - limits.min) / (limits.max - limits.min) * limits.size;
+  };
+
+  Scaler.prototype.x = function(value) {
+    return this.scale(value, this.xlimits);
+  };
+
+  Scaler.prototype.y = function(value) {
+    return this.scale(value, this.ylimits);
+  };
 
   function Stage() {
     this.vertexes = {x: [], y: []};
@@ -43,7 +64,7 @@
       maxx: _.max(this.vertexes.x),
       miny: _.min(this.vertexes.y),
       maxy: _.max(this.vertexes.y),
-    });
+    }, 500, 500);
   };
 
   function Wad(wad) {
@@ -100,10 +121,6 @@
     }
   };
 
-  function scale(x, minx, maxx, size) {
-    return (x - minx) / (maxx - minx) * size;
-  }
-
   function draw_stage(stage) {
     var ctx = $("#playfield")[0].getContext("2d");
     ctx.clearRect(0, 0, 500, 500);
@@ -111,14 +128,10 @@
     var lines = stage.lines;
     for (var i = 0; i < lines.length; i++) {
       ctx.beginPath();      
-      ctx.moveTo(scale(vertexes.x[lines[i].begin], 
-                       stage.scaler.limits.minx, stage.scaler.limits.maxx, 500),
-                 scale(vertexes.y[lines[i].begin], 
-                       stage.scaler.limits.miny, stage.scaler.limits.maxy, 500));
-      ctx.lineTo(scale(vertexes.x[lines[i].end], 
-                       stage.scaler.limits.minx, stage.scaler.limits.maxx, 500),
-                 scale(vertexes.y[lines[i].end], 
-                       stage.scaler.limits.miny, stage.scaler.limits.maxy, 500));
+      ctx.moveTo(stage.scaler.x(vertexes.x[lines[i].begin]),
+                 stage.scaler.y(vertexes.y[lines[i].begin]));
+      ctx.lineTo(stage.scaler.x(vertexes.x[lines[i].end]),
+                 stage.scaler.y(vertexes.y[lines[i].end]));
       ctx.stroke();
     }
   }
