@@ -16,16 +16,16 @@
     return (str + '\0').split('\0').shift();
   }
 
-  function Scaler(limits, windowx, windowy) {
+  function Scaler(limits) {
     this.xlimits = {
       min: limits.minx,
       max: limits.maxx,
-      size: windowx
+      size: limits.windowx
     };
     this.ylimits = {
       min: limits.miny,
       max: limits.maxy,
-      size: windowy
+      size: limits.windowy
     };
   }
 
@@ -44,7 +44,6 @@
   function Stage() {
     this.vertexes = {x: [], y: []};
     this.lines = [];
-    this.scaler = 0;
   }
 
   Stage.prototype.push_vertex = function(vertex) {
@@ -62,7 +61,9 @@
       maxx: _.max(this.vertexes.x),
       miny: _.min(this.vertexes.y),
       maxy: _.max(this.vertexes.y),
-    }, 500, 500);
+      windowx: 500,
+      windowy: 500
+    });
   };
 
   Stage.prototype.draw = function(context) {
