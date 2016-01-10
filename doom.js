@@ -20,17 +20,27 @@
     this.xlimits = {
       min: limits.minx,
       max: limits.maxx,
-      size: limits.windowx
+      inner: limits.maxx - limits.minx,
+      outer: limits.windowx
     };
     this.ylimits = {
       min: limits.miny,
       max: limits.maxy,
-      size: limits.windowy
+      inner: limits.maxy - limits.miny,
+      outer: limits.windowy
     };
+    if (this.xlimits.inner > this.ylimits.inner) {
+      this.xlimits.coef = this.xlimits.outer / this.xlimits.inner;
+      this.ylimits.coef = this.xlimits.coef;
+    } else {
+      this.ylimits.coef = this.ylimits.outer / this.ylimits.inner;
+      this.xlimits.coef = this.ylimits.coef;
+    }
+    console.log(this.xlimits);
   }
 
   Scaler.prototype.scale = function(value, limits) {
-    return (value - limits.min) / (limits.max - limits.min) * limits.size;
+    return (value - limits.min) * limits.coef;
   };
 
   Scaler.prototype.x = function(value) {
@@ -38,7 +48,7 @@
   };
 
   Scaler.prototype.y = function(value) {
-    return this.ylimits.size - this.scale(value, this.ylimits);
+    return this.ylimits.outer - this.scale(value, this.ylimits);
   };
 
   function Stage() {
