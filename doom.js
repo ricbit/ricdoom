@@ -145,7 +145,22 @@
         }
       }
     }
+    if (this.signed_polygon_area(polygon) < 0) {
+      polygon.reverse();
+    }
     return polygon;
+  };
+
+  Stage.prototype.signed_polygon_area = function(polygon) {
+    var sum = 0;
+    _.each(polygon, function(line) {
+      var ax = this.vertexes.x[line.begin];
+      var bx = this.vertexes.x[line.end];
+      var ay = this.vertexes.y[line.begin];
+      var by = this.vertexes.y[line.end];
+      sum += (bx - ax) * (by + ay);
+    }.bind(this));
+    return sum;
   };
 
   Stage.prototype.draw = function(context, sector) {
