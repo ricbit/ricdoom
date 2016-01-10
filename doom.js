@@ -112,13 +112,13 @@
 
   Stage.prototype.draw = function(context, sector) {
     context.clearRect(0, 0, 500, 500);
+    var sector_finder = function(sidedef) {
+      return this.sidedefs[sidedef].sector == sector;
+    }.bind(this);
     for (var i = 0; i < this.lines.length; i++) {
       var line = this.lines[i];
       context.beginPath();
-      var has_sector = _.any(line.sidedefs, function(sidedef) {
-        return this.sidedefs[sidedef].sector == sector;
-      }.bind(this));
-      if (has_sector) {
+      if (_.any(line.sidedefs, sector_finder)) {
         context.strokeStyle="#FF0000";
       } else {
         context.strokeStyle="#000000";
