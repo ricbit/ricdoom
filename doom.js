@@ -38,7 +38,7 @@
   };
 
   Scaler.prototype.y = function(value) {
-    return this.scale(value, this.ylimits);
+    return this.ylimits.size - this.scale(value, this.ylimits);
   };
 
   function Stage() {
@@ -207,12 +207,9 @@
     select.change(function() {
       var name = $(this).find(":selected").text();
       var context = $("#playfield")[0].getContext("2d");
-      window.global_sector = 0;
-      setInterval(function() {
-        var stage = wad.parse_stage(name);
-        stage.optimize();
-        stage.draw(context, window.global_sector++);
-      }, 1000);
+      var stage = wad.parse_stage(name);
+      stage.optimize();
+      stage.draw(context, 1);
     });
   }
 
