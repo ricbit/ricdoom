@@ -134,12 +134,16 @@
     }
   };
 
-  function fill_select() { 
-    var all_names = _.pluck(state.wad.directory, "name");
+  Wad.prototype.get_stage_names = function() {
+    var all_names = _.pluck(this.directory, "name");
     var name_regexp = /^E.M.$/;
-    var stage_names = _.filter(all_names, function(name) {
+    return _.filter(all_names, function(name) {
       return name_regexp.test(name);
     });
+  }
+
+  function fill_select() {
+    var stage_names = state.wad.get_stage_names();
     var select = $("#stage_select");
     _.each(stage_names, function(name) {
       select.append($("<option>", {
