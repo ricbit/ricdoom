@@ -117,55 +117,54 @@
     var start = _.findWhere(this.directory, {name: stage_name}).index;
     var assets = _.rest(this.directory, start);
     this.parse_sectors(assets, stage);
-    console.log(stage.sectors);
     this.parse_sidedefs(assets, stage);
-    console.log(stage.sidedefs);
     this.parse_vertexes(assets, stage);
     this.parse_lines(assets, stage);
     return stage;
   };
 
-  Wad.prototype.parse_vertexes = function(assets, stage) {
-    var entry = _.findWhere(assets, {name: "VERTEXES"});
-    var size = entry.size / 4;
-    for (var i = 0; i < size; i++) {
-      stage.push_vertex({
-        x: this.wad.getInt16(entry.start + i * 4, true),
-        y: this.wad.getInt16(entry.start + i * 4 + 2, true)
-      });
+  Wad.prototype.parse_iterator = function(assets, name, size, parser) {
+    var entry = _.findWhere(assets, {name: name});
+    var entry_size = entry.size / size;
+    for (var i = 0; i < entry_size; i++) {
+      var addr = entry.start + i * size;
+      parser(addr, this.wad);
     }
+  };
+
+  Wad.prototype.parse_vertexes = function(assets, stage) {
+    this.parse_iterator(assets, "VERTEXES", 4, function(addr, wad) {
+      stage.push_vertex({
+        x: wad.getInt16(addr + 0, true),
+        y: wad.getInt16(addr + 2, true)
+      });
+    });
   };
 
   Wad.prototype.parse_lines = function(assets, stage) {
-    var entry = _.findWhere(assets, {name: "LINEDEFS"});
-    var size = entry.size / 14;
-    for (var i = 0; i < size; i++) {
+    this.parse_iterator(assets, "LINEDEFS", 14, function(addr, wad) {
       stage.push_line({
-        begin: this.wad.getUint16(entry.start + i * 14 + 0, true),
-        end: this.wad.getUint16(entry.start + i * 14 + 2, true)
+        begin: wad.getUint16(addr + 0, true),
+        end: wad.getUint16(addr + 2, true)
       });
-    }
+    });
   };
 
   Wad.prototype.parse_sectors = function(assets, stage) {
-    var entry = _.findWhere(assets, {name: "SECTORS"});
-    var size = entry.size / 26;
-    for (var i = 0; i < size; i++) {
+    this.parse_iterator(assets, "SECTORS", 26, function(addr, wad) {
       stage.push_sector({
-        floor: wad_trim(this.wad.getString(8, entry.start + i * 26 + 4))
+        floor: wad_trim(wad.getString(8, addr + 4))
       });
-    }
+    });
   };
 
   Wad.prototype.parse_sidedefs = function(assets, stage) {
-    var entry = _.findWhere(assets, {name: "SIDEDEFS"});
-    var size = entry.size / 30;
-    for (var i = 0; i < size; i++) {
+    this.parse_iterator(assets, "SIDEDEFS", 30, function(addr, wad) {
       stage.push_sidedef({
-        sector: this.wad.getUint16(entry.start + i * 30 + 28, true),
+        sector: wad.getUint16(addr + 28, true),
       });
-    }
-  }
+    });
+  };
 
   Wad.prototype.get_stage_names = function() {
     var all_names = _.pluck(this.directory, "name");
