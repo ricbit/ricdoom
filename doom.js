@@ -45,6 +45,7 @@
     this.vertexes = {x: [], y: []};
     this.lines = [];
     this.sectors = [];
+    this.sidedefs = [];
   }
 
   Stage.prototype.push_vertex = function(vertex) {
@@ -58,7 +59,11 @@
 
   Stage.prototype.push_sector = function(sector) {
     this.sectors.push(sector);
-  }
+  };
+
+  Stage.prototype.push_sidedef = function(sidedef) {
+    this.sidedefs.push(sidedef);
+  };
 
   Stage.prototype.optimize = function() {
     this.scaler = new Scaler({
@@ -113,6 +118,8 @@
     var assets = _.rest(this.directory, start);
     this.parse_sectors(assets, stage);
     console.log(stage.sectors);
+    this.parse_sidedefs(assets, stage);
+    console.log(stage.sidedefs);
     this.parse_vertexes(assets, stage);
     this.parse_lines(assets, stage);
     return stage;
@@ -146,6 +153,16 @@
     for (var i = 0; i < size; i++) {
       stage.push_sector({
         floor: wad_trim(this.wad.getString(8, entry.start + i * 26 + 4))
+      });
+    }
+  };
+
+  Wad.prototype.parse_sidedefs = function(assets, stage) {
+    var entry = _.findWhere(assets, {name: "SIDEDEFS"});
+    var size = entry.size / 30;
+    for (var i = 0; i < size; i++) {
+      stage.push_sidedef({
+        sector: this.wad.getUint16(entry.start + i * 30 + 28, true),
       });
     }
   }
