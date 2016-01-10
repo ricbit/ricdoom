@@ -54,7 +54,18 @@
   };
 
   Stage.prototype.push_line = function(line) {
-    this.lines.push(line);
+    var parsed_line = {
+      begin: line.begin,
+      end: line.end,
+      sidedefs: []
+    };
+    if (line.right != 65535) {
+      parsed_line.sidedefs.push(line.right);
+    }
+    if (line.left != 65535) {
+      parsed_line.sidedefs.push(line.left);
+    }
+    this.lines.push(parsed_line);
   };
 
   Stage.prototype.push_sector = function(sector) {
@@ -76,11 +87,19 @@
     });
   };
 
-  Stage.prototype.draw = function(context) {
+  Stage.prototype.draw = function(context, sector) {
     context.clearRect(0, 0, 500, 500);
     for (var i = 0; i < this.lines.length; i++) {
       var line = this.lines[i];
-      context.beginPath();      
+      context.beginPath();
+      var has_sector = _.any(line.sidedefs, function(sidedef) {
+        return this.sidedefs[sidedef].sector == sector;
+      }.bind(this));
+      if (has_sector) {
+        context.strokeStyle="#FF0000";
+      } else {
+        context.strokeStyle="#000000";
+      }
       context.moveTo(this.scaler.x(this.vertexes.x[line.begin]),
                      this.scaler.y(this.vertexes.y[line.begin]));
       context.lineTo(this.scaler.x(this.vertexes.x[line.end]),
@@ -145,7 +164,9 @@
     this.parse_iterator(assets, "LINEDEFS", 14, function(addr, wad) {
       stage.push_line({
         begin: wad.getUint16(addr + 0, true),
-        end: wad.getUint16(addr + 2, true)
+        end: wad.getUint16(addr + 2, true),
+        right: wad.getUint16(addr + 10, true),
+        left: wad.getUint16(addr + 12, true)
       });
     });
   };
@@ -186,9 +207,12 @@
     select.change(function() {
       var name = $(this).find(":selected").text();
       var context = $("#playfield")[0].getContext("2d");
-      var stage = wad.parse_stage(name);
-      stage.optimize();
-      stage.draw(context);
+      window.global_sector = 0;
+      setInterval(function() {
+        var stage = wad.parse_stage(name);
+        stage.optimize();
+        stage.draw(context, window.global_sector++);
+      }, 1000);
     });
   }
 
