@@ -165,17 +165,50 @@
 
   Stage.prototype.draw = function(context, sector) {
     context.clearRect(0, 0, 500, 500);
-    var sector_finder = function(sidedef) {
-      return this.sidedefs[sidedef].sector == sector;
-    }.bind(this);
+    this.draw_filled_sectors(context, sector);
+    this.draw_lines(context, sector);
+  };
+
+  Stage.prototype.draw_filled_sectors = function(context, sector) {
+    _.each(this.sectors, function(sector) {
+      _.each(sector.raw_polygons, function(polygon) {
+        var random_color = _.random(0xFFFFFF);
+        var random_string = ("000000" + random_color.toString(16)).slice(-6);
+        context.fillStyle = "#" + random_string;
+        context.beginPath();
+        var points = this.get_point_list(polygon);
+        context.moveTo(this.scaler.x(points[0].x),
+                       this.scaler.y(points[0].y));
+        _.each(_.rest(points), function(point) {
+          context.lineTo(this.scaler.x(point.x),
+                         this.scaler.y(point.y));
+        }.bind(this));
+        context.closePath();
+        context.fill();
+      }.bind(this));
+    }.bind(this));
+  };
+
+  Stage.prototype.get_point_list = function(polygon) {
+    var cur = polygon[0].begin;
+    var points = [cur];
+    _.each(polygon, function(line) {
+      cur = cur == line.begin ? line.end : line.begin;
+      points.push(cur);
+    });
+    return _.map(points, function(point) {
+      return {
+        x: this.vertexes.x[point],
+        y: this.vertexes.y[point]
+      };
+    }.bind(this));
+  };
+
+  Stage.prototype.draw_lines = function(context, sector) {
+    context.strokeStyle = "#000000";
     for (var i = 0; i < this.lines.length; i++) {
       var line = this.lines[i];
       context.beginPath();
-      if (_.any(line.sidedefs, sector_finder)) {
-        context.strokeStyle="#FF0000";
-      } else {
-        context.strokeStyle="#000000";
-      }
       context.moveTo(this.scaler.x(this.vertexes.x[line.begin]),
                      this.scaler.y(this.vertexes.y[line.begin]));
       context.lineTo(this.scaler.x(this.vertexes.x[line.end]),
