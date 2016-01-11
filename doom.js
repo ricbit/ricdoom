@@ -172,27 +172,29 @@
   Stage.prototype.draw_filled_sectors = function(context, sector) {
     _.each(this.sectors, function(sector) {
       _.each(sector.raw_polygons, function(polygon) {
-        var random_color = _.random(0xFFFFFF);
-        var random_string = ("000000" + random_color.toString(16)).slice(-6);
-        context.fillStyle = "#" + random_string;
-        context.beginPath();
-        var points = this.get_point_list(polygon);
-        context.moveTo(this.scaler.x(points[0].x),
-                       this.scaler.y(points[0].y));
-        _.each(_.rest(points), function(point) {
-          context.lineTo(this.scaler.x(point.x),
-                         this.scaler.y(point.y));
-        }.bind(this));
-        context.closePath();
-        context.fill();
+        if (polygon.length > 1) {
+          var random_color = _.random(0xFFFFFF);
+          var random_string = ("000000" + random_color.toString(16)).slice(-6);
+          context.fillStyle = "#" + random_string;
+          context.beginPath();
+          var points = this.get_point_list(polygon);
+          context.moveTo(this.scaler.x(points[0].x),
+                         this.scaler.y(points[0].y));
+          _.each(_.rest(points), function(point) {
+            context.lineTo(this.scaler.x(point.x),
+                           this.scaler.y(point.y));
+          }.bind(this));
+          context.closePath();
+          context.fill();
+        }
       }.bind(this));
     }.bind(this));
   };
 
   Stage.prototype.get_point_list = function(polygon) {
-    var cur = polygon[0].begin;
+    var cur = _.difference(polygon[0].vertexes, polygon[1].vertexes)[0];
     var points = [cur];
-    _.each(polygon, function(line) {
+    _.each(_.initial(polygon), function(line) {
       cur = cur == line.begin ? line.end : line.begin;
       points.push(cur);
     });
