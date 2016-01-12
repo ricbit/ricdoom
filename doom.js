@@ -127,6 +127,12 @@
           sector.raw_polygons.push(polygon);
         }
       }
+      var bug = _.any(sector.raw_polygons, function(polygon) {
+        return polygon.length <= 2;
+      }); 
+      if (bug) {
+        console.log(sector);
+      }
     }.bind(this));
   };
 
@@ -163,10 +169,10 @@
     return sum;
   };
 
-  Stage.prototype.draw = function(context, sector) {
-    context.clearRect(0, 0, 500, 500);
-    this.draw_filled_sectors(context, sector);
-    this.draw_lines(context, sector);
+  Stage.prototype.draw = function(svg, sector) {
+    //context.clearRect(0, 0, 500, 500);
+    //this.draw_filled_sectors(context, sector);
+    this.draw_lines(svg, sector);
   };
 
   Stage.prototype.draw_filled_sectors = function(context, sector) {
@@ -206,16 +212,14 @@
     }.bind(this));
   };
 
-  Stage.prototype.draw_lines = function(context, sector) {
-    context.strokeStyle = "#000000";
+  Stage.prototype.draw_lines = function(svg, sector) {
+    var g = svg.group({stroke: "black", strokeWidth: 1});
     for (var i = 0; i < this.lines.length; i++) {
       var line = this.lines[i];
-      context.beginPath();
-      context.moveTo(this.scaler.x(this.vertexes.x[line.begin]),
-                     this.scaler.y(this.vertexes.y[line.begin]));
-      context.lineTo(this.scaler.x(this.vertexes.x[line.end]),
-                     this.scaler.y(this.vertexes.y[line.end]));
-      context.stroke();
+      svg.line(g, this.scaler.x(this.vertexes.x[line.begin]),
+                  this.scaler.y(this.vertexes.y[line.begin]),
+                  this.scaler.x(this.vertexes.x[line.end]),
+                  this.scaler.y(this.vertexes.y[line.end]));
     }
   };
 
@@ -318,10 +322,11 @@
     });
     select.change(function() {
       var name = $(this).find(":selected").text();
-      var context = $("#playfield")[0].getContext("2d");
+      //var context = $("#playfield")[0].getContext("2d");
+      var svg = $("#playfield").svg("get");
       var stage = wad.parse_stage(name);
       stage.optimize();
-      stage.draw(context, 1);
+      stage.draw(svg, 1);
     });
   }
 
@@ -349,8 +354,16 @@
     var wad = new Wad(binary_wad);
     $("#loading").hide();
     $("#main").show();
-    fill_select(wad);
-    load_first_stage();
+    $("#playfield").svg({
+      onLoad: function() {
+        fill_select(wad);
+        load_first_stage();
+      },
+      settings: {
+        width: 500,
+        height: 500
+      }
+    });
   }
 
   function ready() {
