@@ -170,28 +170,25 @@
   };
 
   Stage.prototype.draw = function(svg, sector) {
-    //context.clearRect(0, 0, 500, 500);
-    //this.draw_filled_sectors(context, sector);
+    svg.clear();
+    this.draw_filled_sectors(svg, sector);
     this.draw_lines(svg, sector);
   };
 
-  Stage.prototype.draw_filled_sectors = function(context, sector) {
+  Stage.prototype.get_random_color = function() {
+    var random_color = _.random(0xFFFFFF);
+    var random_string = ("000000" + random_color.toString(16)).slice(-6);
+    return "#" + random_string;
+  };
+
+  Stage.prototype.draw_filled_sectors = function(svg, sector) {
     _.each(this.sectors, function(sector) {
       _.each(sector.raw_polygons, function(polygon) {
-        if (polygon.length > 1) {
-          var random_color = _.random(0xFFFFFF);
-          var random_string = ("000000" + random_color.toString(16)).slice(-6);
-          context.fillStyle = "#" + random_string;
-          context.beginPath();
-          var points = this.get_point_list(polygon);
-          context.moveTo(this.scaler.x(points[0].x),
-                         this.scaler.y(points[0].y));
-          _.each(_.rest(points), function(point) {
-            context.lineTo(this.scaler.x(point.x),
-                           this.scaler.y(point.y));
+        if (polygon.length > 2) {
+          var points = _.map(this.get_point_list(polygon), function(point) {
+            return [this.scaler.x(point.x), this.scaler.y(point.y)];
           }.bind(this));
-          context.closePath();
-          context.fill();
+          svg.polyline(points, {fill: this.get_random_color()});
         }
       }.bind(this));
     }.bind(this));
@@ -214,13 +211,12 @@
 
   Stage.prototype.draw_lines = function(svg, sector) {
     var g = svg.group({stroke: "black", strokeWidth: 1});
-    for (var i = 0; i < this.lines.length; i++) {
-      var line = this.lines[i];
+    _.each(this.lines, function(line) {
       svg.line(g, this.scaler.x(this.vertexes.x[line.begin]),
                   this.scaler.y(this.vertexes.y[line.begin]),
                   this.scaler.x(this.vertexes.x[line.end]),
                   this.scaler.y(this.vertexes.y[line.end]));
-    }
+    }.bind(this));
   };
 
   function Wad(wad) {
@@ -322,7 +318,6 @@
     });
     select.change(function() {
       var name = $(this).find(":selected").text();
-      //var context = $("#playfield")[0].getContext("2d");
       var svg = $("#playfield").svg("get");
       var stage = wad.parse_stage(name);
       stage.optimize();
