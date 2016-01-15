@@ -82,12 +82,6 @@
     if (line.left != 65535) {
       parsed_line.sidedefs.push(line.left);
     }
-    if (line.right != 65535 && line.left != 65535 &&
-        this.sectors[this.sidedefs[line.right]] ==
-        this.sectors[this.sidedefs[line.left]]) {
-      console.log("double line");
-    }
-        
     this.lines.push(parsed_line);
   };
 
@@ -116,11 +110,20 @@
     this.collect_polygons();
   };
 
+  Stage.prototype.is_double_line = function(line) {
+    var sectors = _.map(line.sidedefs, function(sidedef) {
+      return this.sidedefs[sidedef].sector;
+    }.bind(this));
+    return (line.sidedefs.length > 1 && _.intersection(sectors).length == 1);
+  }
+
   Stage.prototype.collect_lines_from_sectors = function() {
     _.each(this.lines, function(line) {
-      _.each(line.sidedefs, function(sidedef) {
-        this.sectors[this.sidedefs[sidedef].sector].lines.push(line.index);
-      }.bind(this));
+      if (!this.is_double_line(line)) {
+        _.each(line.sidedefs, function(sidedef) {
+          this.sectors[this.sidedefs[sidedef].sector].lines.push(line.index);
+        }.bind(this));
+      }
     }.bind(this));
   };
 
