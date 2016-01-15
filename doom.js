@@ -118,9 +118,23 @@
     }.bind(this));
   };
 
+  Stage.prototype.get_shared_vertexes = function(lines) {
+    var all_vertexes = _.flatten(_.map(lines, function(line) {
+      return this.lines[line].vertexes;
+    }.bind(this)));
+    var grouped_vertexes = _.countBy(all_vertexes, _.identity);
+    var shared_vertexes = _.filter(_.keys(grouped_vertexes), function(key) {
+      return grouped_vertexes[key] > 2;
+    });
+    if (shared_vertexes.length > 0) {
+      console.log(shared_vertexes);
+    }
+  };
+
   Stage.prototype.collect_polygons = function() {
     _.each(this.sectors, function(sector) {
       var visited = filled_array(sector.lines.length, false);
+      var shared_vertexes = this.get_shared_vertexes(sector.lines);
       for (var i = 0; i < sector.lines.length; i++) {
         if (!visited[i]) {
           var polygon = this.traverse_polygon(sector, i, visited);
