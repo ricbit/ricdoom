@@ -135,12 +135,12 @@
     _.each(this.sectors, function(sector) {
       var visited = filled_array(sector.lines.length, false);
       var shared_vertexes = this.get_shared_vertexes(sector.lines);
-      for (var i = 0; i < sector.lines.length; i++) {
+      _.each(sector.lines, function(line, i) {
         if (!visited[i]) {
           var polygon = this.traverse_polygon(sector, i, visited);
           sector.raw_polygons.push(polygon);
         }
-      }
+      }.bind(this));
       var bug = _.any(sector.raw_polygons, function(polygon) {
         return polygon.length <= 2;
       }); 
