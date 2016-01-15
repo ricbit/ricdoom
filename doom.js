@@ -82,6 +82,12 @@
     if (line.left != 65535) {
       parsed_line.sidedefs.push(line.left);
     }
+    if (line.right != 65535 && line.left != 65535 &&
+        this.sectors[this.sidedefs[line.right]] ==
+        this.sectors[this.sidedefs[line.left]]) {
+      console.log("double line");
+    }
+        
     this.lines.push(parsed_line);
   };
 
@@ -145,10 +151,20 @@
         return polygon.length <= 2;
       }); 
       if (bug) {
-        console.log(sector);
+        console.log(this.dump_dot_sector(sector));
       }
     }.bind(this));
   };
+
+  Stage.prototype.dump_dot_sector = function(sector) {
+    var dot = "graph {";
+    _.each(sector.lines, function(line) {
+      dot += "" + this.lines[line].begin;
+      dot += " -- " + this.lines[line].end + ";";
+    }.bind(this));
+    dot += "}";
+    return dot;
+  }
 
   Stage.prototype.traverse_polygon = function(sector, first, visited) {
     var cur = first;
