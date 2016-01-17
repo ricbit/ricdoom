@@ -74,7 +74,9 @@
       end: line.end,
       sidedefs: [],
       vertexes: [line.begin, line.end],
-      index: line.index
+      index: line.index,
+      flags: line.flags,
+      type: line.type
     };
     if (line.right != 65535) {
       parsed_line.sidedefs.push(line.right);
@@ -154,6 +156,7 @@
         return polygon.length <= 2;
       }); 
       if (bug) {
+        console.log("Found non-euclidean polygon");
         console.log(this.dump_dot_sector(sector));
       }
     }.bind(this));
@@ -311,6 +314,8 @@
         end: wad.getUint16(addr + 2, true),
         right: wad.getUint16(addr + 10, true),
         left: wad.getUint16(addr + 12, true),
+        flags: wad.getUint16(addr + 4, true),
+        type: wad.getUint16(addr + 6, true),
         index: index
       });
     });
