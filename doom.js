@@ -93,7 +93,7 @@
     }.bind(this));
     dot += "}";
     return dot;
-  }
+  };
 
   PolygonFinder.prototype.traverse_polygon = function(first) {
     var cur = first;
@@ -110,9 +110,6 @@
         }
       }
     }
-    /*if (this.signed_polygon_area(polygon) < 0) {
-      polygon.reverse();
-    }*/
     return polygon;
   };
 
@@ -180,7 +177,7 @@
       return this.sidedefs[sidedef].sector;
     }.bind(this));
     return (line.sidedefs.length > 1 && _.intersection(sectors).length == 1);
-  }
+  };
 
   Stage.prototype.collect_lines_from_sectors = function() {
     _.each(this.lines, function(line) {
