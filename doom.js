@@ -246,12 +246,15 @@
   };
 
   Stage.prototype.draw_lines = function(svg, sector) {
-    var g = svg.group({stroke: "black", strokeWidth: 1});
+    var normal = {stroke: "black", strokeWidth: 1};
+    var secret = {strokeDashArray: "2, 2"};
+    _.extend(secret, normal);
     _.each(this.lines, function(line) {
-      svg.line(g, this.scaler.x(this.vertexes.x[line.begin]),
-                  this.scaler.y(this.vertexes.y[line.begin]),
-                  this.scaler.x(this.vertexes.x[line.end]),
-                  this.scaler.y(this.vertexes.y[line.end]));
+      svg.line(svg.group(line.flags & 0x20 ? secret : normal),
+               this.scaler.x(this.vertexes.x[line.begin]),
+               this.scaler.y(this.vertexes.y[line.begin]),
+               this.scaler.x(this.vertexes.x[line.end]),
+               this.scaler.y(this.vertexes.y[line.end]));
     }.bind(this));
   };
 
