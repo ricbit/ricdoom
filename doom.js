@@ -56,6 +56,62 @@
     return this.ylimits.outer - this.scale(value, this.ylimits);
   };
 
+  function PolygonFinder(sector, lines) {
+    this.sector = sector;
+    this.lines = lines;
+    this.visited = filled_array(sector.lines.length, false);
+  }
+
+  PolygonFinder.prototype.collect_polygons = function() {
+    //var shared_vertexes = this.get_shared_vertexes(this.sector.lines);
+    var raw_polygons = [];
+    _.each(this.sector.lines, function(line, i) {
+      if (!this.visited[i]) {
+        var polygon = this.traverse_polygon(i);
+        raw_polygons.push(polygon);
+      }
+    }.bind(this));
+    var has_bug = _.any(this.sector.raw_polygons, function(polygon) {
+      return polygon.length <= 2;
+    });
+    if (has_bug) {
+      console.log("Found non-euclidean polygon");
+      console.log(this.dump_dot_sector(sector));
+    }
+    return raw_polygons;
+  };
+
+  PolygonFinder.prototype.dump_dot_sector = function() {
+    var dot = "graph {";
+    _.each(this.sector.lines, function(line) {
+      dot += "" + this.lines[line].begin;
+      dot += " -- " + this.lines[line].end + ";";
+    }.bind(this));
+    dot += "}";
+    return dot;
+  }
+
+  PolygonFinder.prototype.traverse_polygon = function(first) {
+    var cur = first;
+    var polygon = [];
+    while (!this.visited[cur]) {
+      this.visited[cur] = true;
+      polygon.push(this.lines[this.sector.lines[cur]]);
+      for (var i = 0; i < this.sector.lines.length; i++) {
+        if (!this.visited[i] && _.intersection(
+            this.lines[this.sector.lines[cur]].vertexes,
+            this.lines[this.sector.lines[i]].vertexes).length > 0) {
+          cur = i;
+          break;
+        }
+      }
+    }
+    /*if (this.signed_polygon_area(polygon) < 0) {
+      polygon.reverse();
+    }*/
+    return polygon;
+  };
+
   function Stage() {
     this.vertexes = {x: [], y: []};
     this.lines = [];
@@ -109,7 +165,10 @@
       windowy: 500
     });
     this.collect_lines_from_sectors();
-    this.collect_polygons();
+    _.each(this.sectors, function(sector) {
+      var finder = new PolygonFinder(sector, this.lines);
+      sector.raw_polygons = finder.collect_polygons();
+    }.bind(this));
   };
 
   Stage.prototype.is_double_line = function(line) {
@@ -140,57 +199,6 @@
     if (shared_vertexes.length > 0) {
       console.log(shared_vertexes);
     }
-  };
-
-  Stage.prototype.collect_polygons = function() {
-    _.each(this.sectors, function(sector) {
-      var visited = filled_array(sector.lines.length, false);
-      var shared_vertexes = this.get_shared_vertexes(sector.lines);
-      _.each(sector.lines, function(line, i) {
-        if (!visited[i]) {
-          var polygon = this.traverse_polygon(sector, i, visited);
-          sector.raw_polygons.push(polygon);
-        }
-      }.bind(this));
-      var bug = _.any(sector.raw_polygons, function(polygon) {
-        return polygon.length <= 2;
-      }); 
-      if (bug) {
-        console.log("Found non-euclidean polygon");
-        console.log(this.dump_dot_sector(sector));
-      }
-    }.bind(this));
-  };
-
-  Stage.prototype.dump_dot_sector = function(sector) {
-    var dot = "graph {";
-    _.each(sector.lines, function(line) {
-      dot += "" + this.lines[line].begin;
-      dot += " -- " + this.lines[line].end + ";";
-    }.bind(this));
-    dot += "}";
-    return dot;
-  }
-
-  Stage.prototype.traverse_polygon = function(sector, first, visited) {
-    var cur = first;
-    var polygon = [];
-    while (!visited[cur]) {
-      visited[cur] = true;
-      polygon.push(this.lines[sector.lines[cur]]);
-      for (var i = 0; i < sector.lines.length; i++) {
-        if (!visited[i] && _.intersection(
-            this.lines[sector.lines[cur]].vertexes, 
-            this.lines[sector.lines[i]].vertexes).length > 0) {
-          cur = i;
-          break;
-        }
-      }
-    }
-    if (this.signed_polygon_area(polygon) < 0) {
-      polygon.reverse();
-    }
-    return polygon;
   };
 
   Stage.prototype.signed_polygon_area = function(polygon) {
