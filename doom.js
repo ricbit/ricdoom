@@ -71,14 +71,18 @@
         raw_polygons.push(polygon);
       }
     }.bind(this));
-    var has_bug = _.any(this.sector.raw_polygons, function(polygon) {
+    this.check_bug(raw_polygons);
+    return raw_polygons;
+  };
+
+  PolygonFinder.prototype.check_bug = function(raw_polygons) {
+    var has_bug = _.any(raw_polygons, function(polygon) {
       return polygon.length <= 2;
     });
     if (has_bug) {
       console.log("Found non-euclidean polygon");
-      console.log(this.dump_dot_sector(sector));
+      console.log(this.dump_dot_sector());
     }
-    return raw_polygons;
   };
 
   PolygonFinder.prototype.dump_dot_sector = function() {
