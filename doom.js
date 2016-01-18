@@ -88,8 +88,8 @@
   PolygonFinder.prototype.dump_dot_sector = function() {
     var dot = "graph {";
     _.each(this.sector.lines, function(line) {
-      dot += "" + this.lines[line].begin;
-      dot += " -- " + this.lines[line].end + ";";
+      dot += "" + line.vertexes[0];
+      dot += " -- " + line.vertexes[1] + ";";
     }.bind(this));
     dot += "}";
     return dot;
@@ -100,11 +100,12 @@
     var polygon = [];
     while (!this.visited[cur]) {
       this.visited[cur] = true;
-      polygon.push(this.lines[this.sector.lines[cur]]);
+      //polygon.push(this.lines[this.sector.lines[cur].index]);
+      polygon.push(this.sector.lines[cur].index);
       for (var i = 0; i < this.sector.lines.length; i++) {
         if (!this.visited[i] && _.intersection(
-            this.lines[this.sector.lines[cur]].vertexes,
-            this.lines[this.sector.lines[i]].vertexes).length > 0) {
+            this.sector.lines[cur].vertexes,
+            this.sector.lines[i].vertexes).length > 0) {
           cur = i;
           break;
         }
@@ -168,7 +169,12 @@
     this.collect_lines_from_sectors();
     _.each(this.sectors, function(sector) {
       var finder = new PolygonFinder(sector, this.lines);
-      sector.raw_polygons = finder.collect_polygons();
+      var polygons = finder.collect_polygons();
+      sector.raw_polygons = _.map(polygons, function(polygon) {
+        return _.map(polygon, function(line) {
+          return this.lines[line];
+        }.bind(this));
+      }.bind(this));
     }.bind(this));
   };
 
@@ -183,7 +189,10 @@
     _.each(this.lines, function(line) {
       if (!this.is_double_line(line)) {
         _.each(line.sidedefs, function(sidedef) {
-          this.sectors[this.sidedefs[sidedef].sector].lines.push(line.index);
+          this.sectors[this.sidedefs[sidedef].sector].lines.push({
+            index: line.index,
+            vertexes: line.vertexes
+          });
         }.bind(this));
       }
     }.bind(this));
