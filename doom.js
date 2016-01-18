@@ -62,6 +62,7 @@
   }
 
   PolygonFinder.prototype.collect_polygons = function() {
+    this.get_shared_vertexes(this.sector.lines);
     var raw_polygons = [];
     _.each(this.sector.lines, function(line, i) {
       if (!this.visited[i]) {
@@ -116,6 +117,20 @@
     this.check_non_euclidean(polygon);
     this.check_open_polygon(polygon);
     return polygon;
+  };
+
+  PolygonFinder.prototype.get_shared_vertexes = function(lines) {
+    var all_vertexes = _.flatten(_.map(lines, function(line) {
+      return line.vertexes;
+    }.bind(this)));
+    var grouped_vertexes = _.countBy(all_vertexes, _.identity);
+    var shared_vertexes = _.filter(_.keys(grouped_vertexes), function(key) {
+      return grouped_vertexes[key] > 2;
+    });
+    if (shared_vertexes.length > 0) {
+      console.log("Shared vertexes");
+      console.log(shared_vertexes);
+    }
   };
 
   function Stage() {
@@ -200,19 +215,6 @@
         }.bind(this));
       }
     }.bind(this));
-  };
-
-  Stage.prototype.get_shared_vertexes = function(lines) {
-    var all_vertexes = _.flatten(_.map(lines, function(line) {
-      return this.lines[line].vertexes;
-    }.bind(this)));
-    var grouped_vertexes = _.countBy(all_vertexes, _.identity);
-    var shared_vertexes = _.filter(_.keys(grouped_vertexes), function(key) {
-      return grouped_vertexes[key] > 2;
-    });
-    if (shared_vertexes.length > 0) {
-      console.log(shared_vertexes);
-    }
   };
 
   Stage.prototype.signed_polygon_area = function(polygon) {
