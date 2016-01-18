@@ -56,14 +56,12 @@
     return this.ylimits.outer - this.scale(value, this.ylimits);
   };
 
-  function PolygonFinder(sector, lines) {
+  function PolygonFinder(sector) {
     this.sector = sector;
-    this.lines = lines;
     this.visited = filled_array(sector.lines.length, false);
   }
 
   PolygonFinder.prototype.collect_polygons = function() {
-    //var shared_vertexes = this.get_shared_vertexes(this.sector.lines);
     var raw_polygons = [];
     _.each(this.sector.lines, function(line, i) {
       if (!this.visited[i]) {
@@ -100,7 +98,6 @@
     var polygon = [];
     while (!this.visited[cur]) {
       this.visited[cur] = true;
-      //polygon.push(this.lines[this.sector.lines[cur].index]);
       polygon.push(this.sector.lines[cur].index);
       for (var i = 0; i < this.sector.lines.length; i++) {
         if (!this.visited[i] && _.intersection(
@@ -168,7 +165,7 @@
     });
     this.collect_lines_from_sectors();
     _.each(this.sectors, function(sector) {
-      var finder = new PolygonFinder(sector, this.lines);
+      var finder = new PolygonFinder(sector);
       var polygons = finder.collect_polygons();
       sector.raw_polygons = _.map(polygons, function(polygon) {
         return _.map(polygon, function(line) {
