@@ -69,16 +69,21 @@
         raw_polygons.push(polygon);
       }
     }.bind(this));
-    this.check_bug(raw_polygons);
     return raw_polygons;
   };
 
-  PolygonFinder.prototype.check_bug = function(raw_polygons) {
-    var has_bug = _.any(raw_polygons, function(polygon) {
-      return polygon.length <= 2;
-    });
-    if (has_bug) {
+  PolygonFinder.prototype.check_non_euclidean = function(polygon) {
+    if (polygon.length <= 2) {
       console.log("Found non-euclidean polygon");
+      console.log(this.dump_dot_sector());
+    }
+  };
+
+  PolygonFinder.prototype.check_open_polygon = function(polygon) {
+    if (_.intersection(_.first(polygon).vertexes, 
+                       _.last(polygon).vertexes).length == 0)  {
+      console.log("Found open polygon");
+      console.log(polygon);
       console.log(this.dump_dot_sector());
     }
   };
@@ -98,7 +103,7 @@
     var polygon = [];
     while (!this.visited[cur]) {
       this.visited[cur] = true;
-      polygon.push(this.sector.lines[cur].index);
+      polygon.push(this.sector.lines[cur]);
       for (var i = 0; i < this.sector.lines.length; i++) {
         if (!this.visited[i] && _.intersection(
             this.sector.lines[cur].vertexes,
@@ -108,6 +113,8 @@
         }
       }
     }
+    this.check_non_euclidean(polygon);
+    this.check_open_polygon(polygon);
     return polygon;
   };
 
@@ -169,7 +176,7 @@
       var polygons = finder.collect_polygons();
       sector.raw_polygons = _.map(polygons, function(polygon) {
         return _.map(polygon, function(line) {
-          return this.lines[line];
+          return this.lines[line.index];
         }.bind(this));
       }.bind(this));
     }.bind(this));
