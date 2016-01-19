@@ -56,15 +56,15 @@
     return this.ylimits.outer - this.scale(value, this.ylimits);
   };
 
-  function PolygonFinder(sector) {
-    this.sector = sector;
-    this.visited = filled_array(sector.lines.length, false);
+  function PolygonFinder(lines) {
+    this.lines = lines;
+    this.visited = filled_array(lines.length, false);
   }
 
   PolygonFinder.prototype.collect_polygons = function() {
-    this.get_shared_vertexes(this.sector.lines);
+    this.get_shared_vertexes(this.lines);
     var raw_polygons = [];
-    _.each(this.sector.lines, function(line, i) {
+    _.each(this.lines, function(line, i) {
       if (!this.visited[i]) {
         var polygon = this.traverse_polygon(i);
         raw_polygons.push(polygon);
@@ -91,7 +91,7 @@
 
   PolygonFinder.prototype.dump_dot_sector = function() {
     var dot = "graph {";
-    _.each(this.sector.lines, function(line) {
+    _.each(this.lines, function(line) {
       dot += "" + line.vertexes[0];
       dot += " -- " + line.vertexes[1] + ";";
     }.bind(this));
@@ -104,11 +104,11 @@
     var polygon = [];
     while (!this.visited[cur]) {
       this.visited[cur] = true;
-      polygon.push(this.sector.lines[cur]);
-      for (var i = 0; i < this.sector.lines.length; i++) {
+      polygon.push(this.lines[cur]);
+      for (var i = 0; i < this.lines.length; i++) {
         if (!this.visited[i] && _.intersection(
-            this.sector.lines[cur].vertexes,
-            this.sector.lines[i].vertexes).length > 0) {
+            this.lines[cur].vertexes,
+            this.lines[i].vertexes).length > 0) {
           cur = i;
           break;
         }
@@ -187,7 +187,7 @@
     });
     this.collect_lines_from_sectors();
     _.each(this.sectors, function(sector) {
-      var finder = new PolygonFinder(sector);
+      var finder = new PolygonFinder(sector.lines);
       var polygons = finder.collect_polygons();
       sector.raw_polygons = _.map(polygons, function(polygon) {
         return _.map(polygon, function(line) {
