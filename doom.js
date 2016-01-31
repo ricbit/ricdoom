@@ -59,35 +59,91 @@
   function PolygonFinder(lines) {
     this.lines = lines;
     this.visited = filled_array(lines.length, false);
+    this.raw_polygons = [];
   }
 
   PolygonFinder.prototype.collect_polygons = function() {
-    var shared_vertexes = this.get_shared_vertexes(this.lines);
-    if (shared_vertexes.length > 0) {
-      return this.collect_polygons_hard(shared_vertexes);
+    for (var i = 0 ; i < 3; i++) {
+      var shared_vertexes = this.get_shared_vertexes(this.lines);
+      if (shared_vertexes.length > 0) {
+        this.collect_polygons_hard(shared_vertexes);
+      }
     }
-    var raw_polygons = [];
     _.each(this.lines, function(line, i) {
       if (!this.visited[i]) {
-        var polygon = this.traverse_polygon(i);
-        raw_polygons.push(polygon);
+        this.traverse_polygon(i);
       }
     }.bind(this));
-    return raw_polygons;
+    return this.raw_polygons;
   };
 
   PolygonFinder.prototype.collect_polygons_hard = function(shared_vertexes) {
-    if (undefined == _.find(shared_vertexes, function(vertex) {
+    if (undefined === _.find(shared_vertexes, function(vertex) {
       console.log("Trying vertex ", vertex);
       return this.try_shared_vertex(vertex, shared_vertexes);
     }.bind(this))) {
       console.log("Could not find simple polygon");
     }
-  }
+  };
 
   PolygonFinder.prototype.try_shared_vertex = function(vertex, shared) {
-    return false;
-  }
+    var candidates = this.get_lines_from_vertex(vertex, shared);
+    console.log("Candidates: ");
+    console.log(candidates);
+    return undefined !== _.find(candidates, function(line_index) {
+      console.log("Trying line ", line_index);
+      return this.traverse_from_line(line_index, vertex, shared);
+    }.bind(this));
+  };
+
+  PolygonFinder.prototype.traverse_from_line = function(
+      line_index, start_vertex, shared) {
+    var visited = _.clone(this.visited);
+    var current_vertex = start_vertex;
+    var current_line = line_index;
+    var polygon = [this.lines[line_index]];
+    visited[current_line] = true;
+    while (true) {
+      var next_vertexes = _.without(
+          this.lines[current_line].vertexes, current_vertex);
+      if (next_vertexes.length === 0) {
+        return false;
+      }
+      current_vertex = next_vertexes[0];
+      if (_.contains(shared, current_vertex)) {
+        break;
+      }
+      var count = 0;
+      _.each(this.lines, function(line, index) {
+        if (!visited[index] && _.contains(line.vertexes, current_vertex)) {
+          current_line = index;
+          polygon.push(line);
+          count++;
+          visited[index] = true;
+        }
+      });
+      if (count != 1) {
+        return false;
+      }
+    }
+    if (current_vertex != start_vertex) {
+      return false;
+    }
+    this.raw_polygons.push(polygon);
+    this.visited = visited;
+    console.log(polygon);
+    return true;
+  };
+
+  PolygonFinder.prototype.get_lines_from_vertex = function(vertex, shared) {
+    var lines = [];
+    for (var i = 0; i < this.lines.length; i++) {
+      if (!this.visited[i] && _.contains(this.lines[i].vertexes, vertex)) {
+        lines.push(i);
+      }
+    }
+    return lines;
+  };
 
   PolygonFinder.prototype.check_non_euclidean = function(polygon) {
     if (polygon.length <= 2) {
@@ -98,7 +154,7 @@
 
   PolygonFinder.prototype.check_open_polygon = function(polygon) {
     if (_.intersection(_.first(polygon).vertexes, 
-                       _.last(polygon).vertexes).length == 0)  {
+                       _.last(polygon).vertexes).length === 0)  {
       console.log("Found open polygon");
       console.log(polygon);
       console.log(this.dump_dot_sector());
@@ -132,22 +188,28 @@
     }
     this.check_non_euclidean(polygon);
     this.check_open_polygon(polygon);
-    return polygon;
+    this.raw_polygons.push(polygon);
   };
 
   PolygonFinder.prototype.get_shared_vertexes = function(lines) {
-    var all_vertexes = _.flatten(_.map(lines, function(line) {
-      return line.vertexes;
-    }));
-    var grouped_vertexes = _.countBy(all_vertexes, _.identity);
+    var all_vertexes = [];
+    for (var i = 0; i < lines.length; i++) {
+      if (!this.visited[i]) {
+        all_vertexes.push(lines[i].vertexes);
+      }
+    }
+    var flattened = _.flatten(all_vertexes);
+    var grouped_vertexes = _.countBy(flattened, _.identity);
     var shared_vertexes = _.filter(_.keys(grouped_vertexes), function(key) {
       return grouped_vertexes[key] > 2;
-    });
+    });    
     if (shared_vertexes.length > 0) {
       console.log("Shared vertexes");
       console.log(shared_vertexes);
     }
-    return shared_vertexes;
+    return _.map(shared_vertexes, function(value) {
+      return parseInt(value);
+    });
   };
 
   function Stage() {
@@ -252,8 +314,15 @@
     this.draw_lines(svg, sector);
   };
 
+  Stage.prototype.choose_color = function() {
+    var r = _.random(20, 255);
+    var g = _.random(20, 255);
+    var b = _.random(20, 255);
+    return (r << 16) + (g << 8) + b;
+  }
+
   Stage.prototype.get_random_color = function() {
-    var random_color = _.random(0xFFFFFF);
+    var random_color = this.choose_color();
     var random_string = ("000000" + random_color.toString(16)).slice(-6);
     return "#" + random_string;
   };
