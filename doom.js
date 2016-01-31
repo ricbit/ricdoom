@@ -62,7 +62,10 @@
   }
 
   PolygonFinder.prototype.collect_polygons = function() {
-    this.get_shared_vertexes(this.lines);
+    var shared_vertexes = this.get_shared_vertexes(this.lines);
+    if (shared_vertexes.length > 0) {
+      return this.collect_polygons_hard(shared_vertexes);
+    }
     var raw_polygons = [];
     _.each(this.lines, function(line, i) {
       if (!this.visited[i]) {
@@ -72,6 +75,19 @@
     }.bind(this));
     return raw_polygons;
   };
+
+  PolygonFinder.prototype.collect_polygons_hard = function(shared_vertexes) {
+    if (undefined == _.find(shared_vertexes, function(vertex) {
+      console.log("Trying vertex ", vertex);
+      return this.try_shared_vertex(vertex, shared_vertexes);
+    }.bind(this))) {
+      console.log("Could not find simple polygon");
+    }
+  }
+
+  PolygonFinder.prototype.try_shared_vertex = function(vertex, shared) {
+    return false;
+  }
 
   PolygonFinder.prototype.check_non_euclidean = function(polygon) {
     if (polygon.length <= 2) {
@@ -122,7 +138,7 @@
   PolygonFinder.prototype.get_shared_vertexes = function(lines) {
     var all_vertexes = _.flatten(_.map(lines, function(line) {
       return line.vertexes;
-    }.bind(this)));
+    }));
     var grouped_vertexes = _.countBy(all_vertexes, _.identity);
     var shared_vertexes = _.filter(_.keys(grouped_vertexes), function(key) {
       return grouped_vertexes[key] > 2;
@@ -131,6 +147,7 @@
       console.log("Shared vertexes");
       console.log(shared_vertexes);
     }
+    return shared_vertexes;
   };
 
   function Stage() {
