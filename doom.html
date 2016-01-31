@@ -11,26 +11,15 @@
       div#main {
         display: none;
       }
-      @keyframes spin {
-        from { transform:rotate(0deg); }
-        to { transform:rotate(360deg); }
-      }
-      .spinning {
-        animation-name: spin;
-        animation-duration: 4000ms;
-        animation-iteration-count: infinite;
-        animation-timing-function: linear;
-        font-size: 40px;
-        text-align: center;
-        width: 50px;
-        height: 50px;
+      #wad_progress {
+        width: 300px;
       }
     </style>
   </head>
   <body>
     <div id="loading">
       <p>Loading WAD</p>
-      <p class="spinning">&#8635;</p>
+      <progress id="wad_progress">
     </div>
     <div id="main">
       <form>

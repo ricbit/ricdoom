@@ -424,6 +424,11 @@
         abort("Error loading WAD");
       }
     };
+    xhr.addEventListener("progress", function(progress) {
+      var progress_bar = $("#wad_progress");
+      progress_bar.attr("max", progress.total);
+      progress_bar.attr("value", progress.loaded);
+    }, false);
     xhr.send();
   }
 
