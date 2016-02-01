@@ -66,6 +66,7 @@
     for (var i = 0 ; i < 3; i++) {
       var shared_vertexes = this.get_shared_vertexes(this.lines);
       if (shared_vertexes.length > 0) {
+        console.log(this.dump_dot_sector());
         this.collect_polygons_hard(shared_vertexes);
       }
     }
@@ -315,9 +316,9 @@
   };
 
   Stage.prototype.choose_color = function() {
-    var r = _.random(20, 255);
-    var g = _.random(20, 255);
-    var b = _.random(20, 255);
+    var r = _.random(32, 255);
+    var g = _.random(32, 255);
+    var b = _.random(32, 255);
     return (r << 16) + (g << 8) + b;
   }
 
