@@ -495,8 +495,11 @@
       }
     };
     xhr.addEventListener("progress", function(progress) {
+      // Hardcoded the max value, because progress.total only works
+      // when the server sets correctly the header Content-length.
+      // Unfortunately this is not the case of my static server.
       var progress_bar = $("#wad_progress");
-      progress_bar.attr("max", progress.total);
+      progress_bar.attr("max", 4196020);
       progress_bar.attr("value", progress.loaded);
     }, false);
     xhr.send();
