@@ -320,7 +320,7 @@
     var g = _.random(32, 255);
     var b = _.random(32, 255);
     return (r << 16) + (g << 8) + b;
-  }
+  };
 
   Stage.prototype.get_random_color = function() {
     var random_color = this.choose_color();
