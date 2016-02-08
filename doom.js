@@ -56,6 +56,65 @@
     return this.ylimits.outer - this.scale(value, this.ylimits);
   };
 
+  function NewPolygonFinder(lines) {
+    this.lines = lines;
+    this.visited = filled_array(lines.length, false);
+    this.raw_polygons = [];
+  }
+
+  NewPolygonFinder.prototype.collect_polygons = function() {
+    this.best_polygon = [];
+    this.best_distance = 10000;
+    this.current_polygon = [this.lines[0]];
+    this.start_vertex = this.lines[0].vertexes[0];
+    this.visited[0] = true;
+    this.find_smallest_cycle(this.lines[0].vertexes[1]);
+    return [this.best_polygon];
+  };
+
+  NewPolygonFinder.prototype.find_smallest_cycle = function(current_vertex) {
+    var candidate_lines = this.get_candidate_lines(current_vertex);
+    _.each(candidate_lines, function(index) {
+      this.visited[index] = true;
+      this.current_polygon.push(this.lines[index]);
+      var other_vertex = this.get_other_vertex(current_vertex, index);
+      if (other_vertex == this.start_vertex && 
+          this.current_polygon.length < this.best_distance) {
+        this.best_polygon = _.clone(this.current_polygon);
+        this.best_distance = this.current_polygon.length;
+      }
+      if (this.current_polygon.length < this.best_distance) {
+        this.find_smallest_cycle(other_vertex);
+      }
+      this.current_polygon.pop();
+      this.visited[index] = false;
+    }.bind(this));
+  };
+
+  NewPolygonFinder.prototype.get_other_vertex = function(vertex, index) {
+    return _.difference(this.lines[index].vertexes, [vertex])[0];
+  };
+
+  NewPolygonFinder.prototype.get_available_lines = function() {
+    var available = [];
+    _.each(this.visited, function(visited, index) {
+      if (!visited) {
+        available.push(index)
+      }
+    });
+    return available;
+  };
+
+  NewPolygonFinder.prototype.get_candidate_lines = function(current_vertex) {
+    var candidates = [];
+    _.each(this.get_available_lines(), function(index) {
+      if (_.contains(this.lines[index].vertexes, current_vertex)) {
+        candidates.push(index);
+      }
+    }.bind(this));
+    return candidates;
+  };
+
   function PolygonFinder(lines) {
     this.lines = lines;
     this.visited = filled_array(lines.length, false);
@@ -267,7 +326,7 @@
     });
     this.collect_lines_from_sectors();
     _.each(this.sectors, function(sector) {
-      var finder = new PolygonFinder(sector.lines);
+      var finder = new NewPolygonFinder(sector.lines);
       var polygons = finder.collect_polygons();
       sector.raw_polygons = _.map(polygons, function(polygon) {
         return _.map(polygon, function(line) {
