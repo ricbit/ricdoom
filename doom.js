@@ -121,13 +121,13 @@
       this.visited[index] = true;
       this.current_polygon.push(index);
       var other_vertex = this.get_other_vertex(current_vertex, index);
-      if (other_vertex == this.start_vertex && 
-          this.current_polygon.length < this.best_distance) {
-        this.best_polygon = _.clone(this.current_polygon);
-        this.best_distance = this.current_polygon.length;
-      }
       if (this.current_polygon.length < this.best_distance) {
-        this.smallest_cycle_rec(other_vertex);
+        if (other_vertex == this.start_vertex) { 
+          this.best_polygon = _.clone(this.current_polygon);
+          this.best_distance = this.current_polygon.length;
+        } else {
+          this.smallest_cycle_rec(other_vertex);
+        }
       }
       this.current_polygon.pop();
       this.visited[index] = false;
@@ -149,13 +149,9 @@
   };
 
   PolygonFinder.prototype.get_candidate_lines = function(current_vertex) {
-    var candidates = [];
-    _.each(this.get_available_lines(), function(index) {
-      if (_.contains(this.lines[index].vertexes, current_vertex)) {
-        candidates.push(index);
-      }
+    return _.filter(this.get_available_lines(), function(index) {
+      return _.contains(this.lines[index].vertexes, current_vertex);
     }.bind(this));
-    return candidates;
   };
 
   PolygonFinder.prototype.dump_dot_sector = function() {
