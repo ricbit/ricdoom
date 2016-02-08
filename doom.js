@@ -59,20 +59,32 @@
   function NewPolygonFinder(lines) {
     this.lines = lines;
     this.visited = filled_array(lines.length, false);
-    this.raw_polygons = [];
+    this.all_polygons = [];
   }
 
   NewPolygonFinder.prototype.collect_polygons = function() {
-    this.best_polygon = [];
-    this.best_distance = 10000;
-    this.current_polygon = [this.lines[0]];
-    this.start_vertex = this.lines[0].vertexes[0];
-    this.visited[0] = true;
-    this.find_smallest_cycle(this.lines[0].vertexes[1]);
-    return [this.best_polygon];
+    var polygon = this.collect_one_polygon();
+    return [polygon];
   };
 
-  NewPolygonFinder.prototype.find_smallest_cycle = function(current_vertex) {
+  NewPolygonFinder.prototype.collect_one_polygon = function() {
+    this.best_polygon = [];
+    this.best_distance = 10000;
+    _.each(this.lines, function(line, index) {
+      this.find_smallest_cycle(index);
+    }.bind(this));
+    return this.best_polygon;
+  };
+
+  NewPolygonFinder.prototype.find_smallest_cycle = function(line_index) {
+    this.current_polygon = [this.lines[line_index]];
+    this.start_vertex = this.lines[line_index].vertexes[0];
+    this.visited[line_index] = true;
+    this.smallest_cycle_rec(this.lines[line_index].vertexes[1]);
+    this.visited[line_index] = false;
+  };
+
+  NewPolygonFinder.prototype.smallest_cycle_rec = function(current_vertex) {
     var candidate_lines = this.get_candidate_lines(current_vertex);
     _.each(candidate_lines, function(index) {
       this.visited[index] = true;
@@ -84,7 +96,7 @@
         this.best_distance = this.current_polygon.length;
       }
       if (this.current_polygon.length < this.best_distance) {
-        this.find_smallest_cycle(other_vertex);
+        this.smallest_cycle_rec(other_vertex);
       }
       this.current_polygon.pop();
       this.visited[index] = false;
