@@ -67,6 +67,7 @@
       var polygon = this.collect_one_polygon();
       if (_.isEmpty(polygon)) {
         console.log("Could not find polygon");
+        console.log(this.dump_dot_sector());
         break;
       }
       this.all_polygons.push(polygon);
@@ -99,7 +100,9 @@
     this.best_polygon = [];
     this.best_distance = 10000;
     _.each(this.get_available_lines(), function(index) {
-      this.find_smallest_cycle(index);
+      if (!_.contains(this.best_polygon, index)) {
+        this.find_smallest_cycle(index);
+      }
     }.bind(this));
     return this.best_polygon;
   };
@@ -424,7 +427,9 @@
       var name = $(this).find(":selected").text();
       var svg = $("#playfield").svg("get");
       var stage = wad.parse_stage(name);
+      var before = _.now();
       stage.optimize();
+      console.log(_.now() - before);
       stage.draw(svg, 1);
     });
   }
