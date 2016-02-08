@@ -139,7 +139,7 @@
     var available = [];
     _.each(this.visited, function(visited, index) {
       if (!visited) {
-        available.push(index)
+        available.push(index);
       }
     });
     return available;
