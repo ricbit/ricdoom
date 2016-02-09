@@ -57,8 +57,13 @@
   };
 
   function PolygonFinder(lines) {
-    this.lines = lines;
-    this.visited = filled_array(lines.length, false);
+    this.lines = _.map(lines, function(line) {
+      return {
+        original: line,
+        vertexes: line.vertexes,
+        visited: false
+      };
+    });
     this.all_polygons = [];
   }
 
@@ -78,49 +83,45 @@
 
   PolygonFinder.prototype.format_lines = function() {
     return _.map(this.all_polygons, function(polygon) {
-      return _.map(polygon, function(index) {
-        return this.lines[index];
-      }.bind(this));
-    }.bind(this));
+      return _.pluck(polygon, 'original');
+    });
   };
 
   PolygonFinder.prototype.update_visited = function(polygon) {
-    _.each(polygon, function(index) {
-      this.visited[index] = true;
-    }.bind(this));
+    _.each(polygon, function(line) {
+      line.visited = true;
+    });
   };
 
   PolygonFinder.prototype.has_available_lines = function() {
-    return undefined !== _.find(this.visited, function(visited) {
-      return !visited;
-    });
+    return undefined !== _.findWhere(this.lines, {visited: false});
   };
 
   PolygonFinder.prototype.collect_one_polygon = function() {
     this.best_polygon = [];
     this.best_distance = 10000;
-    _.each(this.get_available_lines(), function(index) {
-      if (!_.contains(this.best_polygon, index)) {
-        this.find_smallest_cycle(index);
+    _.each(this.get_available_lines(), function(line) {
+      if (!_.contains(this.best_polygon, line)) {
+        this.find_smallest_cycle(line);
       }
     }.bind(this));
     return this.best_polygon;
   };
 
-  PolygonFinder.prototype.find_smallest_cycle = function(line_index) {
-    this.current_polygon = [line_index];
-    this.start_vertex = this.lines[line_index].vertexes[0];
-    this.visited[line_index] = true;
-    this.smallest_cycle_rec(this.lines[line_index].vertexes[1]);
-    this.visited[line_index] = false;
+  PolygonFinder.prototype.find_smallest_cycle = function(line) {
+    this.current_polygon = [line];
+    this.start_vertex = line.vertexes[0];
+    line.visited = true;
+    this.smallest_cycle_rec(line.vertexes[1]);
+    line.visited = false;
   };
 
   PolygonFinder.prototype.smallest_cycle_rec = function(current_vertex) {
     var candidate_lines = this.get_candidate_lines(current_vertex);
-    _.each(candidate_lines, function(index) {
-      this.visited[index] = true;
-      this.current_polygon.push(index);
-      var other_vertex = this.get_other_vertex(current_vertex, index);
+    _.each(candidate_lines, function(line) {
+      line.visited = true;
+      this.current_polygon.push(line);
+      var other_vertex = this.get_other_vertex(current_vertex, line);
       if (this.current_polygon.length < this.best_distance) {
         if (other_vertex == this.start_vertex) { 
           this.best_polygon = _.clone(this.current_polygon);
@@ -130,28 +131,22 @@
         }
       }
       this.current_polygon.pop();
-      this.visited[index] = false;
+      line.visited = false;
     }.bind(this));
   };
 
-  PolygonFinder.prototype.get_other_vertex = function(vertex, index) {
-    return _.difference(this.lines[index].vertexes, [vertex])[0];
+  PolygonFinder.prototype.get_other_vertex = function(vertex, line) {
+    return _.difference(line.vertexes, [vertex])[0];
   };
 
   PolygonFinder.prototype.get_available_lines = function() {
-    var available = [];
-    _.each(this.visited, function(visited, index) {
-      if (!visited) {
-        available.push(index);
-      }
-    });
-    return available;
+    return _.where(this.lines, {visited: false});
   };
 
   PolygonFinder.prototype.get_candidate_lines = function(current_vertex) {
-    return _.filter(this.get_available_lines(), function(index) {
-      return _.contains(this.lines[index].vertexes, current_vertex);
-    }.bind(this));
+    return _.filter(this.lines, function(line) {
+      return !line.visited && _.contains(line.vertexes, current_vertex);
+    });
   };
 
   PolygonFinder.prototype.dump_dot_sector = function() {
