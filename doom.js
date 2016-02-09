@@ -82,7 +82,7 @@
   };
 
   PolygonFinder.prototype.format_lines = function() {
-    return _.map(this.all_polygons, function(polygon) {
+    return _.map(this.all_polygons.reverse(), function(polygon) {
       return _.pluck(polygon, 'original');
     });
   };
