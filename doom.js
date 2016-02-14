@@ -177,6 +177,7 @@
       end: line.end,
       sidedefs: [],
       vertexes: [line.begin, line.end],
+      flats: {},
       index: line.index,
       flags: line.flags,
       type: line.type
@@ -200,6 +201,10 @@
 
   Stage.prototype.push_sidedef = function(sidedef) {
     this.sidedefs.push(sidedef);
+  };
+
+  Stage.prototype.push_flat = function(name, bytes) {
+    this.flats[name] = bytes;
   };
 
   Stage.prototype.optimize = function() {
@@ -343,6 +348,7 @@
     var start = _.findWhere(this.directory, {name: stage_name}).index;
     var assets = _.rest(this.directory, start);
     this.parse_sectors(assets, stage);
+    this.parse_flats(stage);
     this.parse_sidedefs(assets, stage);
     this.parse_vertexes(assets, stage);
     this.parse_lines(assets, stage);
@@ -356,6 +362,18 @@
       var addr = entry.start + index * size;
       parser(addr, index, this.wad);
     }
+  };
+
+  Wad.prototype.parse_flats = function(stage) {
+    var start = _.findWhere(this.directory, {name: 'F_START'}).index;
+    var flats = _.rest(this.directory, start);
+    var unique_floors = _.uniq(_.pluck(stage.sectors, 'floor'));
+    console.log(unique_floors);
+    _.each(unique_floors, function(floor) {
+      var entry = _.findWhere(flats, {name: floor});
+      stage.push_flat(floor, this.wad.getBytes(
+          entry.start, entry.size, true, true));
+    });
   };
 
   Wad.prototype.parse_vertexes = function(assets, stage) {
