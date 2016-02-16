@@ -16,6 +16,10 @@
     return (str + '\0').split('\0').shift();
   }
 
+  function toHex(value) {
+    return ("0" + value.toString(16)).substr(-2);  
+  }
+
   function filled_array(size, value) {
     return _.map(new Array(size), function(old) {
       return value;
@@ -164,11 +168,17 @@
     this.lines = [];
     this.sectors = [];
     this.sidedefs = [];
+    this.flats = {};
+    this.palette = [];
   }
 
   Stage.prototype.push_vertex = function(vertex) {
     this.vertexes.x.push(vertex.x);
     this.vertexes.y.push(vertex.y);
+  };
+
+  Stage.prototype.push_palette = function(palette) {
+    this.palette = palette;
   };
 
   Stage.prototype.push_line = function(line) {
@@ -347,6 +357,7 @@
     var stage = new Stage();
     var start = _.findWhere(this.directory, {name: stage_name}).index;
     var assets = _.rest(this.directory, start);
+    this.parse_palette(stage);
     this.parse_sectors(assets, stage);
     this.parse_flats(stage);
     this.parse_sidedefs(assets, stage);
@@ -364,6 +375,19 @@
     }
   };
 
+  Wad.prototype.parse_palette = function(stage) {
+    var entry = _.find(this.directory, {name: 'PLAYPAL'});
+    var raw_rgb = this.wad.getBytes(256 * 3, entry.start, true, true);
+    var palette = _.map(_.range(256), function(i) {
+      return {
+        'r': raw_rgb[i * 3 + 0],
+        'g': raw_rgb[i * 3 + 1],
+        'b': raw_rgb[i * 3 + 2]
+      };
+    });
+    stage.push_palette(palette);
+  };
+
   Wad.prototype.parse_flats = function(stage) {
     var start = _.findWhere(this.directory, {name: 'F_START'}).index;
     var flats = _.rest(this.directory, start);
@@ -372,8 +396,8 @@
     _.each(unique_floors, function(floor) {
       var entry = _.findWhere(flats, {name: floor});
       stage.push_flat(floor, this.wad.getBytes(
-          entry.start, entry.size, true, true));
-    });
+          entry.size, entry.start, true, true));
+    }.bind(this));
   };
 
   Wad.prototype.parse_vertexes = function(assets, stage) {
