@@ -284,7 +284,9 @@
       }.bind(this))));
       ctx.putImageData(image, 0, 0);
       var data_url = canvas.toDataURL("image/png");
-      var pattern = svg.pattern(name, 0, 0, 64, 64);
+      var pattern = svg.pattern(name, 0, 0, 64, 64, 0, 0, 64, 64, {
+        patternUnits: 'userSpaceOnUse'
+      }); 
       svg.image(pattern, 0, 0, 64, 64, data_url);
     }.bind(this));
   };
@@ -331,7 +333,7 @@
   };
 
   Stage.prototype.draw_lines = function(svg) {
-    var normal = {stroke: "black", strokeWidth: 1};
+    var normal = {stroke: "lightgray", strokeWidth: 1};
     var secret = {strokeDashArray: "2, 2"};
     _.extend(secret, normal);
     _.each(this.lines, function(line) {
@@ -406,7 +408,6 @@
     var start = _.findWhere(this.directory, {name: 'F_START'}).index;
     var flats = _.rest(this.directory, start);
     var unique_floors = _.uniq(_.pluck(stage.sectors, 'floor'));
-    console.log(unique_floors);
     _.each(unique_floors, function(floor) {
       var entry = _.findWhere(flats, {name: floor});
       stage.push_flat(floor, this.wad.getBytes(
