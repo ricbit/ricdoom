@@ -265,14 +265,14 @@
     return sum;
   };
 
-  Stage.prototype.draw = function(svg, sector) {
+  Stage.prototype.draw = function(svg) {
     svg.clear();
-    this.draw_patterns(svg, sector);
-    this.draw_filled_sectors(svg, sector);
-    this.draw_lines(svg, sector);
+    this.draw_patterns(svg);
+    this.draw_filled_sectors(svg);
+    this.draw_lines(svg);
   };
 
-  Stage.prototype.draw_patterns = function(svg, sector) {
+  Stage.prototype.draw_patterns = function(svg) {
     _.each(this.flats, function(flat, name) {
       var canvas = document.createElement('canvas');
       console.log(flat);
@@ -306,7 +306,7 @@
     return "#" + random_string;
   };
 
-  Stage.prototype.draw_filled_sectors = function(svg, sector) {
+  Stage.prototype.draw_filled_sectors = function(svg) {
     _.each(this.sectors, function(sector) {
       _.each(sector.raw_polygons, function(polygon) {
         if (polygon.length > 2) {
@@ -334,7 +334,7 @@
     }.bind(this));
   };
 
-  Stage.prototype.draw_lines = function(svg, sector) {
+  Stage.prototype.draw_lines = function(svg) {
     var normal = {stroke: "black", strokeWidth: 1};
     var secret = {strokeDashArray: "2, 2"};
     _.extend(secret, normal);
@@ -480,7 +480,7 @@
       var before = _.now();
       stage.optimize();
       console.log(_.now() - before);
-      stage.draw(svg, 1);
+      stage.draw(svg);
     });
   }
 
