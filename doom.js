@@ -275,7 +275,6 @@
   Stage.prototype.draw_patterns = function(svg) {
     _.each(this.flats, function(flat, name) {
       var canvas = document.createElement('canvas');
-      canvas.id = name;
       canvas.width = 64;
       canvas.height = 64;
       var ctx = canvas.getContext('2d');
@@ -284,7 +283,9 @@
         return this.palette[pixel];
       }.bind(this))));
       ctx.putImageData(image, 0, 0);
-      document.body.appendChild(canvas);
+      var data_url = canvas.toDataURL("image/png");
+      var pattern = svg.pattern(name, 0, 0, 64, 64);
+      svg.image(pattern, 0, 0, 64, 64, data_url);
     }.bind(this));
   };
 
@@ -308,7 +309,7 @@
           var points = _.map(this.get_point_list(polygon), function(point) {
             return [this.scaler.x(point.x), this.scaler.y(point.y)];
           }.bind(this));
-          svg.polyline(points, {fill: this.get_random_color()});
+          svg.polyline(points, {fill: 'url(#' + sector.floor+ ')'});
         }
       }.bind(this));
     }.bind(this));
