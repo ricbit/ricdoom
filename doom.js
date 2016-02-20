@@ -267,8 +267,30 @@
 
   Stage.prototype.draw = function(svg, sector) {
     svg.clear();
+    this.draw_patterns(svg, sector);
     this.draw_filled_sectors(svg, sector);
     this.draw_lines(svg, sector);
+  };
+
+  Stage.prototype.draw_patterns = function(svg, sector) {
+    _.each(this.flats, function(flat, name) {
+      var canvas = document.createElement('canvas');
+      console.log(flat);
+      console.log(name);
+      canvas.id = name;
+      canvas.width = 64;
+      canvas.height = 64;
+      var ctx = canvas.getContext('2d');
+      var data = ctx.createImageData(64, 64);
+      for (var i = 0; i < 64 * 64; i++) {
+        data.data[i * 4 + 0] = this.palette[flat[i]][0];
+        data.data[i * 4 + 1] = this.palette[flat[i]][1];
+        data.data[i * 4 + 2] = this.palette[flat[i]][2];
+        data.data[i * 4 + 3] = 255;
+      }
+      ctx.putImageData(data, 0, 0);
+      document.body.appendChild(canvas);
+    }.bind(this));
   };
 
   Stage.prototype.choose_color = function() {
@@ -374,11 +396,11 @@
     var entry = _.find(this.directory, {name: 'PLAYPAL'});
     var raw_rgb = this.wad.getBytes(256 * 3, entry.start, true, true);
     var palette = _.map(_.range(256), function(i) {
-      return {
-        'r': raw_rgb[i * 3 + 0],
-        'g': raw_rgb[i * 3 + 1],
-        'b': raw_rgb[i * 3 + 2]
-      };
+      return [
+        raw_rgb[i * 3 + 0],
+        raw_rgb[i * 3 + 1],
+        raw_rgb[i * 3 + 2]
+      ];
     });
     stage.push_palette(palette);
   };
