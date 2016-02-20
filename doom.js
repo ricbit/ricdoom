@@ -275,20 +275,15 @@
   Stage.prototype.draw_patterns = function(svg) {
     _.each(this.flats, function(flat, name) {
       var canvas = document.createElement('canvas');
-      console.log(flat);
-      console.log(name);
       canvas.id = name;
       canvas.width = 64;
       canvas.height = 64;
       var ctx = canvas.getContext('2d');
-      var data = ctx.createImageData(64, 64);
-      for (var i = 0; i < 64 * 64; i++) {
-        data.data[i * 4 + 0] = this.palette[flat[i]][0];
-        data.data[i * 4 + 1] = this.palette[flat[i]][1];
-        data.data[i * 4 + 2] = this.palette[flat[i]][2];
-        data.data[i * 4 + 3] = 255;
-      }
-      ctx.putImageData(data, 0, 0);
+      var image = ctx.createImageData(64, 64);
+      image.data.set(_.flatten(_.map(flat, function(pixel) {
+        return this.palette[pixel];
+      }.bind(this))));
+      ctx.putImageData(image, 0, 0);
       document.body.appendChild(canvas);
     }.bind(this));
   };
@@ -399,7 +394,8 @@
       return [
         raw_rgb[i * 3 + 0],
         raw_rgb[i * 3 + 1],
-        raw_rgb[i * 3 + 2]
+        raw_rgb[i * 3 + 2],
+        255
       ];
     });
     stage.push_palette(palette);
