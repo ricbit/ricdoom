@@ -16,10 +16,6 @@
     return (str + '\0').split('\0').shift();
   }
 
-  function toHex(value) {
-    return ("0" + value.toString(16)).substr(-2);  
-  }
-
   function filled_array(size, value) {
     return _.map(new Array(size), function(old) {
       return value;
@@ -187,7 +183,6 @@
       end: line.end,
       sidedefs: [],
       vertexes: [line.begin, line.end],
-      flats: {},
       index: line.index,
       flags: line.flags,
       type: line.type
