@@ -291,19 +291,6 @@
     }.bind(this));
   };
 
-  Stage.prototype.choose_color = function() {
-    var r = _.random(32, 255);
-    var g = _.random(32, 255);
-    var b = _.random(32, 255);
-    return (r << 16) + (g << 8) + b;
-  };
-
-  Stage.prototype.get_random_color = function() {
-    var random_color = this.choose_color();
-    var random_string = ("000000" + random_color.toString(16)).slice(-6);
-    return "#" + random_string;
-  };
-
   Stage.prototype.draw_filled_sectors = function(svg) {
     _.each(this.sectors, function(sector) {
       _.each(sector.raw_polygons, function(polygon) {
