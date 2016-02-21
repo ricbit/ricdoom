@@ -284,9 +284,10 @@
       }.bind(this))));
       ctx.putImageData(image, 0, 0);
       var data_url = canvas.toDataURL("image/png");
-      var pattern = svg.pattern(name, 0, 0, 64, 64, 0, 0, 64, 64, {
-        patternUnits: 'userSpaceOnUse'
-      }); 
+      var pattern = svg.pattern(
+        name, 0, 0, 
+        this.scaler.xlimits.coef * 64, this.scaler.ylimits.coef * 64, 
+        0, 0, 64, 64, {patternUnits: 'userSpaceOnUse'}); 
       svg.image(pattern, 0, 0, 64, 64, data_url);
     }.bind(this));
   };
