@@ -8,11 +8,26 @@
     <script type="text/javascript" src="jdataview.js"></script>
     <script type="text/javascript" src="doom.js"></script>
     <style>
+      body {
+        margin: 0px;
+      }
       div#main {
         display: none;
       }
+      header {
+        height: 30px;
+        padding-left: 10px;
+        background-color: lightblue;
+      }
+      div#playfield {
+        width: 500;
+        height: 500;
+      }
       #wad_progress {
         width: 300px;
+      }
+      form {
+        line-height: 30px;
       }
     </style>
   </head>
@@ -22,11 +37,13 @@
       <progress id="wad_progress">
     </div>
     <div id="main">
-      <form>
-        Select stage:
-        <select name="stage" id="stage_select"></select>
-      </form>
-      <div width="500" height="500" id="playfield"></div>
+      <header>
+        <form>
+          Select stage:
+          <select name="stage" id="stage_select"></select>
+        </form>
+      </header>
+      <div id="playfield"></div>
     </div>
     </div>
   </body>
