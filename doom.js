@@ -218,8 +218,8 @@
       maxx: _.max(this.vertexes.x),
       miny: _.min(this.vertexes.y),
       maxy: _.max(this.vertexes.y),
-      windowx: 500,
-      windowy: 500
+      windowx: $("#playfield").width(),
+      windowy: $("#playfield").height()
     });
     this.collect_lines_from_sectors();
     _.each(this.sectors, function(sector) {
@@ -502,14 +502,15 @@
     var wad = new Wad(binary_wad);
     $("#loading").hide();
     $("#main").show();
+    console.log($("#playfield").height());
     $("#playfield").svg({
       onLoad: function() {
         fill_select(wad);
         load_first_stage();
       },
       settings: {
-        width: 500,
-        height: 500
+        width: $("#playfield").width() - 1,
+        height: $("#playfield").height() - 1
       }
     });
   }
