@@ -265,47 +265,64 @@
     return sum;
   };
 
-  Stage.prototype.draw = function(svg) {
-    svg.clear();
-    this.draw_patterns(svg);
-    this.draw_filled_sectors(svg);
-    this.draw_lines(svg);
+  function StageRenderer(stage, svg) {
+    this.stage = stage;
+    this.svg = svg;
+  }
+
+  StageRenderer.prototype.draw = function() {
+    this.svg.clear();
+    console.log(this.svg);
+    this.draw_patterns();
+    this.draw_filled_sectors();
+    this.draw_lines();
+    $("#playfield").bind("mousewheel DOMMouseScroll", function(event) {
+      if (event.originalEvent.wheelDelta > 0 || 
+          event.originalEvent.detail < 0) {
+        console.log("up");
+        this.svg.setAttribute("viewBox", "0 0 30 30");
+
+      } else {
+        console.log("down");
+      }
+    });
   };
 
-  Stage.prototype.draw_patterns = function(svg) {
-    _.each(this.flats, function(flat, name) {
+  StageRenderer.prototype.draw_patterns = function() {
+    _.each(this.stage.flats, function(flat, name) {
       var canvas = document.createElement('canvas');
       canvas.width = 64;
       canvas.height = 64;
       var ctx = canvas.getContext('2d');
       var image = ctx.createImageData(64, 64);
       image.data.set(_.flatten(_.map(flat, function(pixel) {
-        return this.palette[pixel];
+        return this.stage.palette[pixel];
       }.bind(this))));
       ctx.putImageData(image, 0, 0);
       var data_url = canvas.toDataURL("image/png");
-      var pattern = svg.pattern(
+      var pattern = this.svg.pattern(
         name, 0, 0, 
-        this.scaler.xlimits.coef * 64, this.scaler.ylimits.coef * 64, 
+        this.stage.scaler.xlimits.coef * 64, this.stage.scaler.ylimits.coef * 64, 
         0, 0, 64, 64, {patternUnits: 'userSpaceOnUse'}); 
-      svg.image(pattern, 0, 0, 64, 64, data_url);
+      this.svg.image(pattern, 0, 0, 64, 64, data_url);
     }.bind(this));
   };
 
-  Stage.prototype.draw_filled_sectors = function(svg) {
-    _.each(this.sectors, function(sector) {
+  StageRenderer.prototype.draw_filled_sectors = function() {
+    _.each(this.stage.sectors, function(sector) {
       _.each(sector.raw_polygons, function(polygon) {
         if (polygon.length > 2) {
           var points = _.map(this.get_point_list(polygon), function(point) {
-            return [this.scaler.x(point.x), this.scaler.y(point.y)];
+            return [this.stage.scaler.x(point.x), this.stage.scaler.y(point.y)];
+
           }.bind(this));
-          svg.polyline(points, {fill: 'url(#' + sector.floor+ ')'});
+          this.svg.polyline(points, {fill: 'url(#' + sector.floor+ ')'});
         }
       }.bind(this));
     }.bind(this));
   };
 
-  Stage.prototype.get_point_list = function(polygon) {
+  StageRenderer.prototype.get_point_list = function(polygon) {
     var cur = _.difference(polygon[0].vertexes, polygon[1].vertexes)[0];
     var points = [cur];
     _.each(_.initial(polygon), function(line) {
@@ -314,22 +331,22 @@
     });
     return _.map(points, function(point) {
       return {
-        x: this.vertexes.x[point],
-        y: this.vertexes.y[point]
+        x: this.stage.vertexes.x[point],
+        y: this.stage.vertexes.y[point]
       };
     }.bind(this));
   };
 
-  Stage.prototype.draw_lines = function(svg) {
+  StageRenderer.prototype.draw_lines = function() {
     var normal = {stroke: "lightgray", strokeWidth: 1};
     var secret = {strokeDashArray: "2, 2"};
     _.extend(secret, normal);
-    _.each(this.lines, function(line) {
-      svg.line(svg.group(line.flags & 0x20 ? secret : normal),
-               this.scaler.x(this.vertexes.x[line.begin]),
-               this.scaler.y(this.vertexes.y[line.begin]),
-               this.scaler.x(this.vertexes.x[line.end]),
-               this.scaler.y(this.vertexes.y[line.end]));
+    _.each(this.stage.lines, function(line) {
+      this.svg.line(this.svg.group(line.flags & 0x20 ? secret : normal),
+               this.stage.scaler.x(this.stage.vertexes.x[line.begin]),
+               this.stage.scaler.y(this.stage.vertexes.y[line.begin]),
+               this.stage.scaler.x(this.stage.vertexes.x[line.end]),
+               this.stage.scaler.y(this.stage.vertexes.y[line.end]));
     }.bind(this));
   };
 
@@ -466,7 +483,8 @@
       var before = _.now();
       stage.optimize();
       console.log(_.now() - before);
-      stage.draw(svg);
+      var renderer = new StageRenderer(stage, svg);
+      renderer.draw();
     });
   }
 
