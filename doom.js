@@ -274,11 +274,12 @@
     this.originY = 0;
     this.dragX = 0;
     this.dragY = 0;
+    this.moveX = 0;
+    this.moveY = 0;
   }
 
   StageRenderer.prototype.draw = function() {
     this.svg.clear();
-    console.log(this.svg);
     this.draw_patterns();
     this.draw_filled_sectors();
     this.draw_lines();
@@ -290,23 +291,50 @@
       } else {
         this.zoom_level *= 1.1;
       }
-      this.set_viewbox(0, 0, this.zoom_level * this.svg.width(), this.zoom_level * this.svg.height());
+      this.set_current_viewbox();
     }.bind(this));
     playfield.mousedown(function(event) {
       this.mouse_down = true;
       playfield.css("cursor", "move");
       this.dragX = event.pageX;
       this.dragY = event.pageY;
+      this.set_current_viewbox();
       event.stopPropagation();
     }.bind(this));
     playfield.mouseup(function(event) {
+      this.moveX = event.pageX;
+      this.moveY = event.pageY;
+      var oX = this.originX;
+      var oY = this.originY;
+      oX -= (this.moveX - this.dragX) * this.zoom_level;
+      oY -= (this.moveY - this.dragY) * this.zoom_level;
+      this.originX = oX;
+      this.originY = oY;
       this.mouse_down = false;
+      this.set_current_viewbox();
       playfield.css("cursor", "default");
       event.stopPropagation();
     }.bind(this));
     playfield.mousemove(function(event) {
+      this.moveX = event.pageX;
+      this.moveY = event.pageY;
+      this.set_current_viewbox();
       event.stopPropagation();
     }.bind(this));
+  };
+
+  StageRenderer.prototype.set_current_viewbox = function() {
+    var oX = this.originX;
+    var oY = this.originY;
+    if (this.mouse_down) {
+      oX -= (this.moveX - this.dragX) * this.zoom_level;
+      oY -= (this.moveY - this.dragY) * this.zoom_level;
+    }
+    this.set_viewbox(
+      oX, 
+      oY,
+      this.zoom_level * this.svg.width(), 
+      this.zoom_level * this.svg.height());
   };
 
   StageRenderer.prototype.set_viewbox = function(oX, oY, width, height) {
@@ -328,7 +356,8 @@
       var data_url = canvas.toDataURL("image/png");
       var pattern = this.svg.pattern(
         name, 0, 0, 
-        this.stage.scaler.xlimits.coef * 64, this.stage.scaler.ylimits.coef * 64, 
+        this.stage.scaler.xlimits.coef * 64, 
+        this.stage.scaler.ylimits.coef * 64, 
         0, 0, 64, 64, {patternUnits: 'userSpaceOnUse'}); 
       this.svg.image(pattern, 0, 0, 64, 64, data_url);
     }.bind(this));
@@ -546,7 +575,6 @@
     var wad = new Wad(binary_wad);
     $("#loading").hide();
     $("#main").show();
-    console.log($("#playfield").height());
     $("#playfield").svg({
       onLoad: function() {
         fill_select(wad);
