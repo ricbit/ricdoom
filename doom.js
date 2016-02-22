@@ -22,6 +22,19 @@
     });
   }
 
+  function bind_mousewheel(dom_node, wheelup, wheeldown) {
+    // jQuery doesn't have a mouse wheel event.
+    // We use 'mousewheel' for Chrome, IE, and 'DOMMouseScroll' for Firefox.
+    dom_node.bind("mousewheel DOMMouseScroll", function(event) {
+      if (event.originalEvent.wheelDelta > 0 || 
+          event.originalEvent.detail < 0) {
+        wheelup();
+      } else {
+        wheeldown();
+      }
+    });
+  };
+
   function Scaler(limits) {
     this.xlimits = {
       min: limits.minx,
@@ -284,19 +297,21 @@
     this.draw_patterns();
     this.draw_filled_sectors();
     this.draw_lines();
-    var playfield = $("#playfield");
-    playfield.bind("mousewheel DOMMouseScroll", function(event) {
-      if (event.originalEvent.wheelDelta > 0 || 
-          event.originalEvent.detail < 0) {
-        this.zoom_level /= 1.1;
-      } else {
-        this.zoom_level *= 1.1;
-      }
-      this.set_current_viewbox();
-    }.bind(this));
-    playfield.mousedown(this.mousedown.bind(this));
-    playfield.mouseup(this.mouseup.bind(this));
-    playfield.mousemove(this.mousemove.bind(this));
+    bind_mousewheel(this.playfield, 
+        this.wheelup.bind(this), this.wheeldown.bind(this));
+    this.playfield.mousedown(this.mousedown.bind(this));
+    this.playfield.mouseup(this.mouseup.bind(this));
+    this.playfield.mousemove(this.mousemove.bind(this));
+  };
+
+  StageRenderer.prototype.wheelup = function(event) {
+    this.zoom_level /= 1.1;
+    this.set_current_viewbox();
+  };
+
+  StageRenderer.prototype.wheeldown = function(event) {
+    this.zoom_level *= 1.1;
+    this.set_current_viewbox();
   };
 
   StageRenderer.prototype.mousedown = function(event) {
@@ -340,8 +355,8 @@
     this.set_viewbox(
       oX,
       oY,
-      this.zoom_level * $("#playfield").width(),
-      this.zoom_level * $("#playfield").height());
+      this.zoom_level * this.svg.width(),
+      this.zoom_level * this.svg.height());
   };
 
   StageRenderer.prototype.set_viewbox = function(oX, oY, width, height) {
