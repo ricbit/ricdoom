@@ -276,6 +276,7 @@
     this.dragY = 0;
     this.moveX = 0;
     this.moveY = 0;
+    this.playfield = $("#playfield");
   }
 
   StageRenderer.prototype.draw = function() {
@@ -293,34 +294,40 @@
       }
       this.set_current_viewbox();
     }.bind(this));
-    playfield.mousedown(function(event) {
-      this.mouse_down = true;
-      playfield.css("cursor", "move");
-      this.dragX = event.pageX;
-      this.dragY = event.pageY;
-      this.set_current_viewbox();
-      event.stopPropagation();
-    }.bind(this));
-    playfield.mouseup(function(event) {
-      this.moveX = event.pageX;
-      this.moveY = event.pageY;
-      var oX = this.originX;
-      var oY = this.originY;
-      oX -= (this.moveX - this.dragX) * this.zoom_level;
-      oY -= (this.moveY - this.dragY) * this.zoom_level;
-      this.originX = oX;
-      this.originY = oY;
-      this.mouse_down = false;
-      this.set_current_viewbox();
-      playfield.css("cursor", "default");
-      event.stopPropagation();
-    }.bind(this));
-    playfield.mousemove(function(event) {
-      this.moveX = event.pageX;
-      this.moveY = event.pageY;
-      this.set_current_viewbox();
-      event.stopPropagation();
-    }.bind(this));
+    playfield.mousedown(this.mousedown.bind(this));
+    playfield.mouseup(this.mouseup.bind(this));
+    playfield.mousemove(this.mousemove.bind(this));
+  };
+
+  StageRenderer.prototype.mousedown = function(event) {
+    this.mouse_down = true;
+    this.playfield.css("cursor", "move");
+    this.dragX = event.pageX;
+    this.dragY = event.pageY;
+    this.set_current_viewbox();
+    event.stopPropagation();
+  };
+
+  StageRenderer.prototype.mouseup = function(event) {
+    this.moveX = event.pageX;
+    this.moveY = event.pageY;
+    var oX = this.originX;
+    var oY = this.originY;
+    oX -= (this.moveX - this.dragX) * this.zoom_level;
+    oY -= (this.moveY - this.dragY) * this.zoom_level;
+    this.originX = oX;
+    this.originY = oY;
+    this.mouse_down = false;
+    this.set_current_viewbox();
+    this.playfield.css("cursor", "default");
+    event.stopPropagation();
+  };
+
+  StageRenderer.prototype.mousemove = function(event) {
+    this.moveX = event.pageX;
+    this.moveY = event.pageY;
+    this.set_current_viewbox();
+    event.stopPropagation();
   };
 
   StageRenderer.prototype.set_current_viewbox = function() {
