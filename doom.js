@@ -331,10 +331,10 @@
       oY -= (this.moveY - this.dragY) * this.zoom_level;
     }
     this.set_viewbox(
-      oX, 
+      oX,
       oY,
-      this.zoom_level * this.svg.width(), 
-      this.zoom_level * this.svg.height());
+      this.zoom_level * $("#playfield").width(),
+      this.zoom_level * $("#playfield").height());
   };
 
   StageRenderer.prototype.set_viewbox = function(oX, oY, width, height) {
@@ -579,10 +579,6 @@
       onLoad: function() {
         fill_select(wad);
         load_first_stage();
-      },
-      settings: {
-        width: $("#playfield").width(),
-        height: $("#playfield").height()
       }
     });
   }
