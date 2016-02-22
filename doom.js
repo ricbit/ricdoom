@@ -268,6 +268,12 @@
   function StageRenderer(stage, svg) {
     this.stage = stage;
     this.svg = svg;
+    this.zoom_level = 1;
+    this.mouse_down = false;
+    this.originX = 0;
+    this.originY = 0;
+    this.dragX = 0;
+    this.dragY = 0;
   }
 
   StageRenderer.prototype.draw = function() {
@@ -276,16 +282,36 @@
     this.draw_patterns();
     this.draw_filled_sectors();
     this.draw_lines();
-    $("#playfield").bind("mousewheel DOMMouseScroll", function(event) {
+    var playfield = $("#playfield");
+    playfield.bind("mousewheel DOMMouseScroll", function(event) {
       if (event.originalEvent.wheelDelta > 0 || 
           event.originalEvent.detail < 0) {
-        console.log("up");
-        this.svg.setAttribute("viewBox", "0 0 30 30");
-
+        this.zoom_level /= 1.1;
       } else {
-        console.log("down");
+        this.zoom_level *= 1.1;
       }
-    });
+      this.set_viewbox(0, 0, this.zoom_level * this.svg.width(), this.zoom_level * this.svg.height());
+    }.bind(this));
+    playfield.mousedown(function(event) {
+      this.mouse_down = true;
+      playfield.css("cursor", "move");
+      this.dragX = event.pageX;
+      this.dragY = event.pageY;
+      event.stopPropagation();
+    }.bind(this));
+    playfield.mouseup(function(event) {
+      this.mouse_down = false;
+      playfield.css("cursor", "default");
+      event.stopPropagation();
+    }.bind(this));
+    playfield.mousemove(function(event) {
+      event.stopPropagation();
+    }.bind(this));
+  };
+
+  StageRenderer.prototype.set_viewbox = function(oX, oY, width, height) {
+    var viewbox = [oX, oY, width, height].join(" ");
+    this.svg.configure({viewBox: viewbox}, false);
   };
 
   StageRenderer.prototype.draw_patterns = function() {
@@ -338,7 +364,7 @@
   };
 
   StageRenderer.prototype.draw_lines = function() {
-    var normal = {stroke: "lightgray", strokeWidth: 1};
+    var normal = {stroke: "lightgray", strokeWidth: 0.2};
     var secret = {strokeDashArray: "2, 2"};
     _.extend(secret, normal);
     _.each(this.stage.lines, function(line) {
@@ -527,8 +553,8 @@
         load_first_stage();
       },
       settings: {
-        width: $("#playfield").width() - 1,
-        height: $("#playfield").height() - 1
+        width: $("#playfield").width(),
+        height: $("#playfield").height()
       }
     });
   }
