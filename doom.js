@@ -326,12 +326,9 @@
   StageRenderer.prototype.mouseup = function(event) {
     this.moveX = event.pageX;
     this.moveY = event.pageY;
-    var oX = this.originX;
-    var oY = this.originY;
-    oX -= (this.moveX - this.dragX) * this.zoom_level;
-    oY -= (this.moveY - this.dragY) * this.zoom_level;
-    this.originX = oX;
-    this.originY = oY;
+    var origin = this.move_origin();
+    this.originX = origin[0];
+    this.originY = origin[1];
     this.mouse_down = false;
     this.set_current_viewbox();
     this.playfield.css("cursor", "default");
@@ -345,16 +342,21 @@
     event.stopPropagation();
   };
 
-  StageRenderer.prototype.set_current_viewbox = function() {
+  StageRenderer.prototype.move_origin = function() {
     var oX = this.originX;
     var oY = this.originY;
     if (this.mouse_down) {
       oX -= (this.moveX - this.dragX) * this.zoom_level;
       oY -= (this.moveY - this.dragY) * this.zoom_level;
     }
+    return [oX, oY];
+  };
+
+  StageRenderer.prototype.set_current_viewbox = function() {
+    var origin = this.move_origin();
     this.set_viewbox(
-      oX,
-      oY,
+      origin[0],
+      origin[1],
       this.zoom_level * this.svg.width(),
       this.zoom_level * this.svg.height());
   };
