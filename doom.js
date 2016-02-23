@@ -226,14 +226,6 @@
   };
 
   Stage.prototype.optimize = function() {
-    this.scaler = new Scaler({
-      minx: _.min(this.vertexes.x),
-      maxx: _.max(this.vertexes.x),
-      miny: _.min(this.vertexes.y),
-      maxy: _.max(this.vertexes.y),
-      windowx: $("#playfield").width(),
-      windowy: $("#playfield").height()
-    });
     this.collect_lines_from_sectors();
     _.each(this.sectors, function(sector) {
       var finder = new PolygonFinder(sector.lines);
@@ -290,6 +282,14 @@
     this.moveX = 0;
     this.moveY = 0;
     this.playfield = $("#playfield");
+    this.scaler = new Scaler({
+      minx: _.min(this.stage.vertexes.x),
+      maxx: _.max(this.stage.vertexes.x),
+      miny: _.min(this.stage.vertexes.y),
+      maxy: _.max(this.stage.vertexes.y),
+      windowx: this.playfield.width(),
+      windowy: this.playfield.height()
+    });
   }
 
   StageRenderer.prototype.draw = function() {
@@ -378,8 +378,8 @@
       var data_url = canvas.toDataURL("image/png");
       var pattern = this.svg.pattern(
         name, 0, 0, 
-        this.stage.scaler.xlimits.coef * 64, 
-        this.stage.scaler.ylimits.coef * 64, 
+        this.scaler.xlimits.coef * 64, 
+        this.scaler.ylimits.coef * 64, 
         0, 0, 64, 64, {patternUnits: 'userSpaceOnUse'}); 
       this.svg.image(pattern, 0, 0, 64, 64, data_url);
     }.bind(this));
@@ -390,7 +390,7 @@
       _.each(sector.raw_polygons, function(polygon) {
         if (polygon.length > 2) {
           var points = _.map(this.get_point_list(polygon), function(point) {
-            return [this.stage.scaler.x(point.x), this.stage.scaler.y(point.y)];
+            return [this.scaler.x(point.x), this.scaler.y(point.y)];
 
           }.bind(this));
           this.svg.polyline(points, {fill: 'url(#' + sector.floor+ ')'});
@@ -420,10 +420,10 @@
     _.extend(secret, normal);
     _.each(this.stage.lines, function(line) {
       this.svg.line(this.svg.group(line.flags & 0x20 ? secret : normal),
-               this.stage.scaler.x(this.stage.vertexes.x[line.begin]),
-               this.stage.scaler.y(this.stage.vertexes.y[line.begin]),
-               this.stage.scaler.x(this.stage.vertexes.x[line.end]),
-               this.stage.scaler.y(this.stage.vertexes.y[line.end]));
+               this.scaler.x(this.stage.vertexes.x[line.begin]),
+               this.scaler.y(this.stage.vertexes.y[line.begin]),
+               this.scaler.x(this.stage.vertexes.x[line.end]),
+               this.scaler.y(this.stage.vertexes.y[line.end]));
     }.bind(this));
   };
 
