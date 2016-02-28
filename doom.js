@@ -269,6 +269,14 @@
     return sum;
   };
 
+  function PolygonSorter(polygons) {
+    this.original_polygons = polygons;
+  }
+
+  PolygonSorter.prototype.sort = function() {
+    return this.original_polygons;
+  };
+
   function StageRenderer(stage, svg) {
     this.stage = stage;
     this.svg = svg;
@@ -390,19 +398,17 @@
     var all_polygons = _.flatten(_.map(this.stage.sectors, function(sector) {
       return _.map(sector.raw_polygons, function(polygon) {
         return {
-          polygon: polygon,
+          polygon: this.get_point_list(polygon),
           floor: sector.floor
         };
-      });
-    }));
-    _.each(all_polygons, function(polygon) {
-      if (polygon.polygon.length > 2) {
-        var points = _.map(this.get_point_list(polygon.polygon), 
-                           function(point) {
-          return [this.scaler.x(point.x), this.scaler.y(point.y)];
-        }.bind(this));
-        this.svg.polyline(points, {fill: 'url(#' + polygon.floor+ ')'});
-      }
+      }.bind(this));
+    }.bind(this)));
+    var sorter = new PolygonSorter(all_polygons);
+    _.each(sorter.sort(all_polygons), function(polygon) {
+      var points = _.map(polygon.polygon, function(point) {
+        return [this.scaler.x(point.x), this.scaler.y(point.y)];
+      }.bind(this));
+      this.svg.polyline(points, {fill: 'url(#' + polygon.floor+ ')'});
     }.bind(this));
   };
 
