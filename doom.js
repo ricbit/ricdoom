@@ -387,15 +387,22 @@
   };
 
   StageRenderer.prototype.draw_filled_sectors = function() {
-    _.each(this.stage.sectors, function(sector) {
-      _.each(sector.raw_polygons, function(polygon) {
-        if (polygon.length > 2) {
-          var points = _.map(this.get_point_list(polygon), function(point) {
-            return [this.scaler.x(point.x), this.scaler.y(point.y)];
-          }.bind(this));
-          this.svg.polyline(points, {fill: 'url(#' + sector.floor+ ')'});
-        }
-      }.bind(this));
+    var all_polygons = _.flatten(_.map(this.stage.sectors, function(sector) {
+      return _.map(sector.raw_polygons, function(polygon) {
+        return {
+          polygon: polygon,
+          floor: sector.floor
+        };
+      });
+    }));
+    _.each(all_polygons, function(polygon) {
+      if (polygon.polygon.length > 2) {
+        var points = _.map(this.get_point_list(polygon.polygon), 
+                           function(point) {
+          return [this.scaler.x(point.x), this.scaler.y(point.y)];
+        }.bind(this));
+        this.svg.polyline(points, {fill: 'url(#' + polygon.floor+ ')'});
+      }
     }.bind(this));
   };
 
