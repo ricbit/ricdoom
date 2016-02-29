@@ -270,7 +270,10 @@
   };
 
   function PolygonSorter(polygons) {
-    this.original_polygons = polygons;
+    this.original_polygons = _.map(polygons, function(original) {
+      original.visited = false;
+      return original;
+    });
   }
 
   PolygonSorter.prototype.sort = function() {
