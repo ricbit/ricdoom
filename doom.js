@@ -270,14 +270,35 @@
   };
 
   function PolygonSorter(polygons) {
-    this.original_polygons = _.map(polygons, function(original) {
+    this.polygons = _.map(polygons, function(original) {
       original.visited = false;
       return original;
     });
+    this.sorted = [];
   }
 
   PolygonSorter.prototype.sort = function() {
-    return this.original_polygons;
+    var available = this.available_polygons();
+    do {
+      _.each(available, function(polygon) {
+        if (this.outside(polygon, available)) {
+          this.sorted.push(polygon);
+          polygon.visited = true;
+        }
+      }.bind(this));
+      available = this.available_polygons();
+    } while (!_.isEmpty(available));
+    return this.sorted;
+  };
+
+  PolygonSorter.prototype.outside = function() {
+    return true;
+  };
+
+  PolygonSorter.prototype.available_polygons = function() {
+    return _.filter(this.polygons, function(polygon) {
+      return !polygon.visited;
+    });
   };
 
   function StageRenderer(stage, svg) {
