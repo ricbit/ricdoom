@@ -291,8 +291,40 @@
     return this.sorted;
   };
 
-  PolygonSorter.prototype.outside = function() {
-    return true;
+  PolygonSorter.prototype.outside = function(polygon, available) {    
+    return _.all(available, function(inside) {
+      if (polygon == inside || inside.visited) {
+        return true;
+      }
+      return !_.all(polygon.polygon, function(point) {
+         return this.point_inside_polygon(point, inside.polygon);
+      }.bind(this));
+    }.bind(this));
+  };
+
+  PolygonSorter.prototype.is_left = function(p0, p1, p2) {
+    return (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y);
+  };
+
+  PolygonSorter.prototype.point_inside_polygon = function(point, polygon) {
+    var wn = 0;
+    for (var i = 0; i < polygon.length; i++) {
+      var i2 = (i + 1) % polygon.length;
+      if (polygon[i].y <= point.y) {
+        if (polygon[i2].y > point.y) {
+          if (this.is_left(polygon[i], polygon[i2], point) > 0) {
+            wn += 1;
+          }
+        }
+      } else {
+        if (polygon[i2].y <= point.y) {
+          if (this.is_left(polygon[i], polygon[i2], point) < 0) {
+            wn -= 1;
+          }
+        }
+      }
+    }
+    return wn != 0;
   };
 
   PolygonSorter.prototype.available_polygons = function() {
